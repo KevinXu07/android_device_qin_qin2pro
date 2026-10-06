@@ -31,3 +31,13 @@ USE_XML_AUDIO_POLICY_CONF := 1
 
 # Skip images we do not ship (stock vendor/product/dtb/dtbo are kept)
 PRODUCT_BUILD_SUPER_PARTITION := false
+
+# Qin2Pro WIP: replacement HAL services validated on device (stock vendor impls
+# crash under A12). Software gatekeeper + AOSP health 2.1 keep locksettings and
+# BatteryService alive; audio impl/effect/libeffects blobs in the vendor tree
+# have been replaced with AOSP builds (same install paths).
+PRODUCT_PACKAGES +=     android.hardware.gatekeeper@1.0-service.software     android.hardware.health@2.1-service     android.hardware.health@2.1-impl
+
+# Init scripts: device init at root (auto-imported as /init.<ro.hardware>.rc),
+# watchdog/PVR helper rc under /system/etc/init (top-level only is scanned).
+PRODUCT_COPY_FILES +=     $(DEVICE_PATH)/rootdir/init.s9863a1h10.rc:$(TARGET_COPY_OUT_ROOT)/init.s9863a1h10.rc     $(DEVICE_PATH)/rootdir/qin_wd.rc:$(TARGET_COPY_OUT_SYSTEM)/etc/init/qin_wd.rc
