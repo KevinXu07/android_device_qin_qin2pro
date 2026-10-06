@@ -27,15 +27,24 @@ Unofficial LineageOS 19.1 bring-up for the DuoQin Qin 2 Pro
 ## Status: WIP
 
 Working:
-- Boots to LineageOS 19.1 with the ported 4.14.199 kernel
+- Full boot to LineageOS 19.1 (`sys.boot_completed=1`, system_server stable)
 - ADB (configfs), permissive SELinux, pstore/ramoops
-- DSI panel + SPRD DPU under DRM/KMS with drm_hwcomposer
-- PowerVR Rogue GE8322 EGL/GLES (DDK 1.10.5187610)
+- DSI panel + SPRD DPU under DRM/KMS with drm_hwcomposer, HW vsync
+- PowerVR Rogue GE8322 EGL/GLES (DDK 1.10.5187610, pvrsrvkm autoloaded
+  via qin_wd.rc)
+- Software gatekeeper (stock vendor impl aborts), AOSP health@2.1 HAL
+- audioserver with AOSP audio@4.0 impl (stock impl/libeffects crash
+  under A12 — replaced by same-path AOSP builds in the vendor tree)
+- keystore2 patched to tolerate missing TEE KeyMint (see
+  `patches/system_security/` — required LOS tree patch)
 - Recovery44 adb fallback + qin_wd watchdog rescue path
+  (auto-cleared on surfaceflinger start / sys.boot_completed)
 
 Not working / bring-up in progress:
-- Touchscreen, audio, TEE/keymint/gatekeeper, cameras, modem, sensors
-- Display smoothness still being tuned (vsync pipeline now functional)
+- Touchscreen, real audio path (A9 audio.primary.* blobs unloaded),
+  TEE/keymint (no hardware TEE — software fallback only),
+  cameras, modem/RIL, sensors
+- Display smoothness still being tuned
 
 `rootdir/` contains the device init.rc (`init.s9863a1h10.rc`, copied to
 the system partition root) and `qin_wd.rc` (`/system/etc/init/qin_wd.rc` —
