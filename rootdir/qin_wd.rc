@@ -1,0 +1,8 @@
+on post-fs
+    insmod /vendor/lib/modules/pvrsrvkm.ko
+
+on property:init.svc.surfaceflinger=running
+    exec - root root -- /system/bin/touch /dev/qin_boot_ok
+
+on property:sys.boot_completed=1
+    exec - root root -- /system/bin/touch /dev/qin_boot_ok

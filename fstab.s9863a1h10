@@ -1,0 +1,12 @@
+# Android fstab file for Qin 2 Pro (system-as-root)
+# The / (system) filesystem is mounted by the bootloader (system-as-root).
+# This file is read by first-stage init from /system/etc/fstab.s9863a1h10.
+# <src>                                         <mnt_point>   <type>  <mnt_flags and options>                                              <fs_mgr_flags>
+/dev/block/platform/soc/soc:ap-ahb/20600000.sdio/by-name/vendor    /vendor       ext4    ro,barrier=1                                                         wait,first_stage_mount
+/dev/block/platform/soc/soc:ap-ahb/20600000.sdio/by-name/misc      /misc         emmc    defaults                                                             defaults,first_stage_mount
+/dev/block/platform/soc/soc:ap-ahb/20600000.sdio/by-name/userdata  /data         f2fs    noatime,nosuid,nodev,discard,inline_xattr,inline_data                wait,check,quota,latemount,reservedsize=128M
+/dev/block/platform/soc/soc:ap-ahb/20600000.sdio/by-name/userdata  /data         ext4    noatime,nosuid,nodev,nomblk_io_submit,noauto_da_alloc                wait,check,latemount
+/dev/block/platform/soc/soc:ap-ahb/20600000.sdio/by-name/cache     /cache        ext4    noatime,nosuid,nodev,nomblk_io_submit,noauto_da_alloc                wait,check,latemount
+/dev/block/platform/soc/soc:ap-ahb/20600000.sdio/by-name/prodnv    /mnt/vendor   ext4    noatime,nosuid,nodev,nomblk_io_submit,noauto_da_alloc                wait,check,latemount
+/devices/platform/soc/soc:ap-ahb/20200000.usb/musb-hdrc.*.auto/usb*      auto    vfat    defaults    voldmanaged=usbdisk:auto
+/devices/platform/soc/soc:ap-ahb/20300000.sdio/mmc_host/mmc1/mmc1:*/block/mmcblk1  auto  vfat  defaults  voldmanaged=sdcard0:auto,noemulatedsd

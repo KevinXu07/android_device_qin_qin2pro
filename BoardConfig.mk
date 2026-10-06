@@ -1,0 +1,127 @@
+#
+# Copyright (C) 2026 The LineageOS Project
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+
+DEVICE_PATH := device/qin/qin2pro
+
+# Bootloader
+TARGET_BOOTLOADER_BOARD_NAME := s9863a1h10
+TARGET_NO_BOOTLOADER := true
+TARGET_NO_RADIOIMAGE := true
+
+# Platform
+TARGET_BOARD_PLATFORM := sp9863a
+TARGET_BOARD_PLATFORM_GPU := mali-g8mp2
+BOARD_USES_SPRD_PLATFORM := true
+
+# Architecture
+TARGET_ARCH := arm64
+TARGET_ARCH_VARIANT := armv8-a
+TARGET_CPU_ABI := arm64-v8a
+TARGET_CPU_ABI2 :=
+TARGET_CPU_VARIANT := cortex-a53
+TARGET_CPU_VARIANT_RUNTIME := cortex-a53
+
+TARGET_2ND_ARCH := arm
+TARGET_2ND_ARCH_VARIANT := armv8-a
+TARGET_2ND_CPU_ABI := armeabi-v7a
+TARGET_2ND_CPU_ABI2 := armeabi
+TARGET_2ND_CPU_VARIANT := cortex-a53
+TARGET_2ND_CPU_VARIANT_RUNTIME := cortex-a53
+
+TARGET_USES_64_BIT_BINDER := true
+
+# Kernel
+TARGET_KERNEL_ARCH := arm64
+TARGET_KERNEL_SOURCE := kernel/sprd/qin2pro
+TARGET_KERNEL_CONFIG := lineage_qin2pro_defconfig
+TARGET_KERNEL_CLANG_COMPILE := false
+TARGET_KERNEL_ADDITIONAL_TOOLCHAIN := $(realpath prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-4.9)
+# SPRD BSP touch drivers must all be on: the adaptive-ts framework and the
+# USB/display drivers reference hooks across them.
+TARGET_KERNEL_ADDITIONAL_CONFIG := CONFIG_TOUCHSCREEN_FOCALTECH_TS=y
+TARGET_KERNEL_ADDITIONAL_CONFIG += CONFIG_TOUCHSCREEN_ILITEK_TDDI=y
+TARGET_KERNEL_ADDITIONAL_CONFIG += CONFIG_TOUCHSCREEN_NVT_SPI=y
+TARGET_KERNEL_ADDITIONAL_CONFIG += CONFIG_TOUCHSCREEN_CHIPONE=y
+TARGET_KERNEL_ADDITIONAL_FLAGS := KCFLAGS=-Wno-error
+BOARD_KERNEL_IMAGE_NAME := Image
+BOARD_KERNEL_CMDLINE := console=ttyS1,115200n8 buildvariant=user androidboot.selinux=permissive
+BOARD_KERNEL_BASE := 0x00000000
+BOARD_KERNEL_OFFSET := 0x00008000
+BOARD_RAMDISK_OFFSET := 0x05400000
+BOARD_SECOND_OFFSET := 0x00f00000
+BOARD_TAGS_OFFSET := 0x00000100
+BOARD_KERNEL_PAGESIZE := 2048
+# Explicit mkbootimg args (the BOARD_*_OFFSET vars are NOT consumed by A12
+# build/make; stock layout puts the ramdisk at 87M so it never overlaps the
+# 25M kernel — the AOSP default 0x1000000 clobbers kernel bytes 16M..25M).
+BOARD_MKBOOTIMG_ARGS := --base 0x00000000 --kernel_offset 0x00008000 --ramdisk_offset 0x05400000 --second_offset 0x00f00000 --tags_offset 0x00000100 --header_version 1
+BOARD_RECOVERY_MKBOOTIMG_ARGS := --base 0x00000000 --kernel_offset 0x00008000 --ramdisk_offset 0x05400000 --second_offset 0x00f00000 --tags_offset 0x00000100 --header_version 1
+BOARD_BOOTIMG_HEADER_VERSION := 1
+BOARD_INCLUDE_RECOVERY_DTBO := true
+BOARD_PREBUILT_RECOVERY_DTBOIMAGE := $(DEVICE_PATH)/recovery/recovery_dtbo.img
+BOARD_KERNEL_SEPARATED_DT := false
+
+# system-as-root (legacy, non-A/B)
+BOARD_BUILD_SYSTEM_ROOT_IMAGE := true
+BOARD_USES_RECOVERY_AS_BOOT := false
+AB_OTA_UPDATER := false
+
+# OTA: allow flashing from both the GSI state and our ROM
+TARGET_OTA_ASSERT_DEVICE := qin2pro,s9863a1h10
+
+# Partitions
+BOARD_BOOTIMAGE_PARTITION_SIZE := 36700160
+BOARD_RECOVERYIMAGE_PARTITION_SIZE := 41943040
+BOARD_CACHEIMAGE_PARTITION_SIZE := 419430400
+BOARD_CACHEIMAGE_FILE_SYSTEM_TYPE := ext4
+BOARD_FLASH_BLOCK_SIZE := 4096
+
+BOARD_SYSTEMIMAGE_PARTITION_SIZE := 3147733504
+BOARD_SYSTEMIMAGE_JOURNAL_SIZE := 0
+BOARD_SYSTEMIMAGE_EXTFS_INODE_COUNT := -1
+
+TARGET_USERIMAGES_USE_EXT4 := true
+TARGET_USERIMAGES_USE_F2FS := true
+BOARD_HAS_LARGE_FILESYSTEM := true
+BOARD_HAS_NO_SELECT_PARTITION := true
+
+# Reserve space for data  (10 GiB eMMC userdata)
+BOARD_USERDATAIMAGE_PARTITION_SIZE := 10737418240
+BOARD_USERDATAIMAGE_FILE_SYSTEM_TYPE := f2fs
+
+# AVB
+BOARD_AVB_ENABLE := false
+
+# Keep Soong's current VNDK variant; the stock vendor modules do not provide
+# a vendor_snapshot module for BOARD_VNDK_VERSION := 28.
+BOARD_VNDK_VERSION := current
+
+# Sepolicy
+
+# Bluetooth (Unisoc wcn HAL from vendor)
+BOARD_HAVE_BLUETOOTH := true
+
+# WiFi: SPRD wcn driver is in-kernel cfg80211; use generic supplicant
+WPA_SUPPLICANT_VERSION := VER_0_8_X
+BOARD_WLAN_DEVICE := wlan0
+
+# Recovery
+TARGET_RECOVERY_PIXEL_FORMAT := RGBX_8888
+BOARD_HAS_DOWNLOAD_MODE := false
+
+# Screen
+TARGET_SCREEN_WIDTH := 1440
+TARGET_SCREEN_HEIGHT := 576
+
+# Low-memory optimization (2 GB RAM)
+MALLOC_SVELTE := true
+
+
+# Disable sanitizers / optimizations not needed for bring-up
+TARGET_NO_KERNEL := false
+
+# Debug
+TWRP_INCLUDE_LOGCAT := false

@@ -1,0 +1,6 @@
+# Spreadtrum names its ADF character devices differently from AOSP libadf.
+# Expose the standard names used by the recovery display backend.
+on init
+    symlink /dev/sprd-adf-dev /dev/adf0
+    symlink /dev/sprd-adf-dev-interface0 /dev/adf-interface0.0
+    symlink /dev/sprd-adf-dev-overlay-engine0 /dev/adf-overlay-engine0.0

@@ -1,0 +1,9 @@
+// Android's ADF userspace library was removed after Android 10. This
+// device still exposes the ADF display interface in recovery.
+cc_library_static {
+    name: "libadf",
+    recovery_available: true,
+    srcs: ["adf.cpp"],
+    local_include_dirs: ["include"],
+    export_include_dirs: ["include"],
+}
