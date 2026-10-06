@@ -23,3 +23,21 @@ Unofficial LineageOS 19.1 bring-up for the DuoQin Qin 2 Pro
   SELinux cmdline flag for bring-up.
 * Data is f2fs, fallback ext4; cache/prodnv ext4.
 * Lunch target: `lineage_qin2pro-userdebug`.
+
+## Status: WIP
+
+Working:
+- Boots to LineageOS 19.1 with the ported 4.14.199 kernel
+- ADB (configfs), permissive SELinux, pstore/ramoops
+- DSI panel + SPRD DPU under DRM/KMS with drm_hwcomposer
+- PowerVR Rogue GE8322 EGL/GLES (DDK 1.10.5187610)
+- Recovery44 adb fallback + qin_wd watchdog rescue path
+
+Not working / bring-up in progress:
+- Touchscreen, audio, TEE/keymint/gatekeeper, cameras, modem, sensors
+- Display smoothness still being tuned (vsync pipeline now functional)
+
+`rootdir/` contains the device init.rc (`init.s9863a1h10.rc`, copied to
+the system partition root) and `qin_wd.rc` (`/system/etc/init/qin_wd.rc` —
+insmods pvrsrvkm and cancels the kernel boot watchdog when SurfaceFlinger
+is up).
