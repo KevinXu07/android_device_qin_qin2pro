@@ -1,0 +1,15 @@
+diff --git a/packages/SystemUI/src/com/android/systemui/DejankUtils.java b/packages/SystemUI/src/com/android/systemui/DejankUtils.java
+index 3fce55f6e515..b3afcf7f3084 100644
+--- a/packages/SystemUI/src/com/android/systemui/DejankUtils.java
++++ b/packages/SystemUI/src/com/android/systemui/DejankUtils.java
+@@ -44,8 +44,8 @@ import java.util.function.Supplier;
+  */
+ public class DejankUtils {
+ 
+-    public static final boolean STRICT_MODE_ENABLED = Build.IS_ENG
+-            || SystemProperties.getBoolean("persist.sysui.strictmode", false);
++    public static final boolean STRICT_MODE_ENABLED =
++            SystemProperties.getBoolean("persist.sysui.strictmode", Build.IS_ENG);
+     private static final Choreographer sChoreographer = Choreographer.getInstance();
+     private static final Handler sHandler = new Handler();
+     private static final ArrayList<Runnable> sPendingRunnables = new ArrayList<>();

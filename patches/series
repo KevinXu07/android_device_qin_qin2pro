@@ -1,0 +1,10 @@
+# LOS repository path followed by patch path relative to this directory.
+frameworks/native frameworks_native/optional_mapper_probe.patch
+frameworks/native frameworks_native/legacy_surface_constructor.patch
+frameworks/base frameworks_base/systemui_strictmode_override.patch
+frameworks/av frameworks_av/audio_hal_version_sentinel.patch
+hardware/interfaces hardware_interfaces/legacy_audio_abi.patch
+hardware/interfaces hardware_interfaces/wifi_async_iface.patch
+hardware/interfaces hardware_interfaces/bluetooth_close_guard.patch
+hardware/interfaces hardware_interfaces/gatekeeper_missing_hal_guard.patch
+system/security system_security/0001-keystore2-tolerate-missing-TEE-keymint.patch

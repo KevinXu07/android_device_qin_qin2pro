@@ -1,0 +1,2 @@
+# Keep root ADB available during Qin bring-up.
+persist.sys.usb.config=adb

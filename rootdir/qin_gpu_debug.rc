@@ -1,0 +1,10 @@
+on post-fs-data
+    start qin-gpu-logcat
+
+service qin-gpu-logcat /system/bin/logcat -b all -v threadtime -f /data/qin-gpu-boot.log -r 4096 -n 2
+    class core
+    user root
+    group root log readproc
+    seclabel u:r:su:s0
+    disabled
+    oneshot

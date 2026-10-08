@@ -1,0 +1,24 @@
+diff --git a/libs/gui/Surface.cpp b/libs/gui/Surface.cpp
+index 353a91d062..f7ee06aa9d 100644
+--- a/libs/gui/Surface.cpp
++++ b/libs/gui/Surface.cpp
+@@ -2632,4 +2632,19 @@ void Surface::destroy() {
+     mSurfaceControlHandle = nullptr;
+ }
+ 
++
++// (L05) Android 7 vendors referenced the two-parameter Surface ctor from
++// libimsmedia_jni.so.  Android 12 only exports the three-parameter form
++// (surfaceControlHandle added), which broke dlopen of that vendor lib and
++// crash-looped com.android.phone.  Provide the legacy complete-object
++// constructor as a forwarding alias; a null surfaceControlHandle reproduces
++// the legacy behavior.
++extern "C" __attribute__((visibility("default"))) void
++_ZN7android7SurfaceC1ERKNS_2spINS_22IGraphicBufferProducerEEEb(
++        void* self, void* producer, bool controlledByApp) {
++    new (self) Surface(*reinterpret_cast<sp<IGraphicBufferProducer>*>(producer),
++                       controlledByApp);
++}
++
+ }; // namespace android
++

@@ -1,0 +1,19 @@
+diff --git a/bluetooth/1.0/default/bluetooth_hci.cc b/bluetooth/1.0/default/bluetooth_hci.cc
+index a2211f4e8..a204baa42 100644
+--- a/bluetooth/1.0/default/bluetooth_hci.cc
++++ b/bluetooth/1.0/default/bluetooth_hci.cc
+@@ -112,8 +112,12 @@ Return<void> BluetoothHci::initialize(
+ 
+ Return<void> BluetoothHci::close() {
+   ALOGI("BluetoothHci::close()");
+-  unlink_cb_(death_recipient_);
+-  VendorInterface::Shutdown();
++  // The stack may close before initialize, or after initialization failed.
++  if (unlink_cb_) {
++    unlink_cb_(death_recipient_);
++    unlink_cb_ = nullptr;
++  }
++  if (VendorInterface::get() != nullptr) VendorInterface::Shutdown();
+   return Void();
+ }
+ 

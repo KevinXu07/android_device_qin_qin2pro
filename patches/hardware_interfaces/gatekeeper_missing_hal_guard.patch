@@ -1,0 +1,50 @@
+diff --git a/gatekeeper/1.0/default/Gatekeeper.cpp b/gatekeeper/1.0/default/Gatekeeper.cpp
+index dce06e69c..1ae2707cd 100644
+--- a/gatekeeper/1.0/default/Gatekeeper.cpp
++++ b/gatekeeper/1.0/default/Gatekeeper.cpp
+@@ -36,7 +36,9 @@ Gatekeeper::Gatekeeper()
+         ret = gatekeeper_open(module, &device);
+     }
+     if (ret < 0) {
+-        LOG_ALWAYS_FATAL_IF(ret < 0, "Unable to open GateKeeper HAL");
++        ALOGW("No gatekeeper HAL module available, operating in software-stub mode");
++        device = nullptr;
++        module = nullptr;
+     }
+ }
+ 
+@@ -48,7 +50,9 @@ Gatekeeper::~Gatekeeper()
+             ALOGE("Unable to close GateKeeper HAL");
+         }
+     }
+-    dlclose(module->dso);
++    if (module != nullptr && module->dso != nullptr) {
++        dlclose(module->dso);
++    }
+ }
+ 
+ // Methods from ::android::hardware::gatekeeper::V1_0::IGatekeeper follow.
+@@ -62,6 +66,11 @@ Return<void> Gatekeeper::enroll(uint32_t uid,
+     uint8_t *enrolled_password_handle = nullptr;
+     uint32_t enrolled_password_handle_length = 0;
+ 
++    if (device == nullptr) {
++        rsp.code = GatekeeperStatusCode::ERROR_NOT_IMPLEMENTED;
++        cb(rsp);
++        return Void();
++    }
+     int ret = device->enroll(device, uid,
+             currentPasswordHandle.data(), currentPasswordHandle.size(),
+             currentPassword.data(), currentPassword.size(),
+@@ -93,6 +102,11 @@ Return<void> Gatekeeper::verify(uint32_t uid,
+     uint32_t auth_token_length = 0;
+     bool request_reenroll = false;
+ 
++    if (device == nullptr) {
++        rsp.code = GatekeeperStatusCode::ERROR_NOT_IMPLEMENTED;
++        cb(rsp);
++        return Void();
++    }
+     int ret = device->verify(device, uid, challenge,
+             enrolledPasswordHandle.data(), enrolledPasswordHandle.size(),
+             providedPassword.data(), providedPassword.size(),

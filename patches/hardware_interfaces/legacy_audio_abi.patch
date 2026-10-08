@@ -1,0 +1,137 @@
+diff --git a/audio/common/all-versions/default/Android.bp b/audio/common/all-versions/default/Android.bp
+index 8f557449f..ccd2eba38 100644
+--- a/audio/common/all-versions/default/Android.bp
++++ b/audio/common/all-versions/default/Android.bp
+@@ -98,7 +98,7 @@ cc_library_shared {
+ cc_library_shared {
+     name: "android.hardware.audio.common@4.0-util",
+     defaults: ["android.hardware.audio.common-util_default"],
+-    srcs: [":android.hardware.audio.common-util@2-6"],
++    srcs: [":android.hardware.audio.common-util@2-6", "HidlUtilsCompat.cpp"],
+     shared_libs: [
+         "android.hardware.audio.common@4.0",
+     ],
+diff --git a/audio/common/all-versions/default/HidlUtilsCompat.cpp b/audio/common/all-versions/default/HidlUtilsCompat.cpp
+new file mode 100644
+--- /dev/null
++++ b/audio/common/all-versions/default/HidlUtilsCompat.cpp
+@@ -0,0 +1,119 @@
++// Compat shim for sprd prebuilt audio HAL blobs: they were built against
++// Android P/Q where HidlUtils lived in
++// android::hardware::audio::common::V4_0 directly (the "implementation"
++// sub-namespace was only introduced later for vendor libs). Forward the
++// legacy-namespace symbols to the current implementation.
++#include "HidlUtils.h"
++#include <hidl/HidlSupport.h>
++#include <string.h>
++
++#if MAJOR_VERSION == 4 && !defined(HIDLUTILS_COMPAT_DECLARED)
++#define HIDLUTILS_COMPAT_DECLARED
++
++namespace android {
++namespace hardware {
++namespace audio {
++namespace common {
++namespace CPP_VERSION {
++
++// Legacy (pre-"implementation") namespace class expected by sprd blobs.
++struct HidlUtils {
++    static status_t audioConfigFromHal(const audio_config_t& halConfig, AudioConfig* config);
++    static status_t audioConfigToHal(const AudioConfig& config, audio_config_t* halConfig);
++    static status_t audioPortConfigFromHal(const struct audio_port_config& halConfig,
++                                           AudioPortConfig* config);
++    static status_t audioPortConfigToHal(const AudioPortConfig& config,
++                                         struct audio_port_config* halConfig);
++    static status_t audioPortConfigsFromHal(unsigned int numHalConfigs,
++                                            const struct audio_port_config* halConfigs,
++                                            ::android::hardware::hidl_vec<AudioPortConfig>* configs);
++    static std::unique_ptr<audio_port_config[]> audioPortConfigsToHal(
++            const ::android::hardware::hidl_vec<AudioPortConfig>& configs);
++    static status_t audioPortFromHal(const struct audio_port& halPort, AudioPort* port);
++    static status_t audioPortToHal(const AudioPort& port, struct audio_port* halPort);
++    static status_t uuidFromHal(const audio_uuid_t& halUuid, Uuid* uuid);
++    static status_t uuidToHal(const Uuid& uuid, audio_uuid_t* halUuid);
++};
++
++status_t HidlUtils::audioConfigFromHal(const audio_config_t& halConfig, AudioConfig* config) {
++    return implementation::HidlUtils::audioConfigFromHal(halConfig, false /*isInput*/, config);
++}
++
++status_t HidlUtils::audioConfigToHal(const AudioConfig& config, audio_config_t* halConfig) {
++    // The sprd blob was compiled against the Android P layout of
++    // audio_config_t: audio_offload_info_t there has 52 bytes of real
++    // fields (no encapsulation_mode/content_id/sync_id) and frame_count
++    // sits at offset 68 instead of 76. Convert fully into a local, then
++    // write the P-layout explicitly so we neither overflow the caller's
++    // stack buffer nor shift frame_count.
++    audio_config_t tmp = AUDIO_CONFIG_INITIALIZER;
++    status_t status = implementation::HidlUtils::audioConfigToHal(config, &tmp);
++    memcpy(halConfig, &tmp, 12);                                  // sr+cm+fmt
++    memcpy(reinterpret_cast<char*>(halConfig) + 12,
++           &tmp.offload_info, 52);                                // P-era fields
++    *reinterpret_cast<uint32_t*>(
++            reinterpret_cast<char*>(halConfig) + 68) = tmp.frame_count;
++    return status;
++}
++
++status_t HidlUtils::audioPortConfigFromHal(const struct audio_port_config& halConfig,
++                                           AudioPortConfig* config) {
++    return implementation::HidlUtils::audioPortConfigFromHal(halConfig, config);
++}
++
++status_t HidlUtils::audioPortConfigToHal(const AudioPortConfig& config,
++                                         struct audio_port_config* halConfig) {
++    return implementation::HidlUtils::audioPortConfigToHal(config, halConfig);
++}
++
++std::unique_ptr<audio_port_config[]> HidlUtils::audioPortConfigsToHal(
++        const ::android::hardware::hidl_vec<AudioPortConfig>& configs) {
++    std::unique_ptr<audio_port_config[]> halConfigs;
++    (void)implementation::HidlUtils::audioPortConfigsToHal(configs, &halConfigs);
++    return halConfigs;
++}
++
++status_t HidlUtils::uuidFromHal(const audio_uuid_t& halUuid, Uuid* uuid) {
++    uuid->timeLow = halUuid.timeLow;
++    uuid->timeMid = halUuid.timeMid;
++    uuid->versionAndTimeHigh = halUuid.timeHiAndVersion;
++    uuid->variantAndClockSeqHigh = halUuid.clockSeq;
++    memcpy(uuid->node.data(), halUuid.node, uuid->node.size());
++    return NO_ERROR;
++}
++
++status_t HidlUtils::uuidToHal(const Uuid& uuid, audio_uuid_t* halUuid) {
++    halUuid->timeLow = uuid.timeLow;
++    halUuid->timeMid = uuid.timeMid;
++    halUuid->timeHiAndVersion = uuid.versionAndTimeHigh;
++    halUuid->clockSeq = uuid.variantAndClockSeqHigh;
++    memcpy(halUuid->node, uuid.node.data(), uuid.node.size());
++    return NO_ERROR;
++}
++
++status_t HidlUtils::audioPortConfigsFromHal(unsigned int numHalConfigs,
++                                            const struct audio_port_config* halConfigs,
++                                            ::android::hardware::hidl_vec<AudioPortConfig>* configs) {
++    configs->resize(numHalConfigs);
++    for (unsigned int i = 0; i < numHalConfigs; i++) {
++        status_t status = audioPortConfigFromHal(halConfigs[i], &(*configs)[i]);
++        if (status != NO_ERROR) return status;
++    }
++    return NO_ERROR;
++}
++
++status_t HidlUtils::audioPortFromHal(const struct audio_port& halPort, AudioPort* port) {
++    return implementation::HidlUtils::audioPortFromHal(halPort, port);
++}
++
++status_t HidlUtils::audioPortToHal(const AudioPort& port, struct audio_port* halPort) {
++    return implementation::HidlUtils::audioPortToHal(port, halPort);
++}
++
++}  // namespace CPP_VERSION
++}  // namespace common
++}  // namespace audio
++}  // namespace hardware
++}  // namespace android
++
++#endif  // MAJOR_VERSION == 4

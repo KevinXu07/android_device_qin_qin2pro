@@ -90,3 +90,23 @@ PRODUCT_COPY_FILES +=     $(DEVICE_PATH)/rootdir/init.s9863a1h10.rc:$(TARGET_COP
 # Consumer IR blaster (vendor IR HAL is registered); without this feature XML
 # system_server dies in ConsumerIrService.
 PRODUCT_COPY_FILES +=     $(DEVICE_PATH)/configs/android.hardware.consumerir.xml:$(TARGET_COPY_OUT_SYSTEM)/etc/permissions/android.hardware.consumerir.xml
+
+# DRM HWC with the stock IMG handle ABI; SPRD DPU cannot decode IMG FBCDC.
+PRODUCT_PACKAGES += hwcomposer.sp9863a
+PRODUCT_COPY_FILES += \
+    $(DEVICE_PATH)/configs/powervr.ini:$(TARGET_COPY_OUT_SYSTEM)/vendor/etc/powervr.ini
+
+# DPU r2p0 programs layer size from src_w/src_h and has no per-plane scaler.
+# Let the existing drm_hwcomposer scaling policy send scaled layers to GPU.
+PRODUCT_VENDOR_PROPERTIES += vendor.hwc.drm.scale_with_gpu=1
+
+# Retain startup logs across boots during display bring-up.
+PRODUCT_COPY_FILES += \
+    $(DEVICE_PATH)/rootdir/qin_gpu_debug.rc:$(TARGET_COPY_OUT_SYSTEM)/etc/init/qin_gpu_debug.rc
+
+# Legacy IMG EGL labels app buffers as linear; A12 color conversion washes
+# out GPU composition. Validated by comparing mixed and all-client output.
+PRODUCT_SYSTEM_PROPERTIES += \
+    ro.surface_flinger.use_color_management=false \
+    persist.sys.strictmode.disable=1 \
+    persist.sysui.strictmode=false

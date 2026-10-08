@@ -1,0 +1,26 @@
+diff --git a/libs/ui/Gralloc3.cpp b/libs/ui/Gralloc3.cpp
+index 4a8a4d09d3..04d319754f 100644
+--- a/libs/ui/Gralloc3.cpp
++++ b/libs/ui/Gralloc3.cpp
+@@ -85,7 +85,7 @@ void Gralloc3Mapper::preload() {
+ }
+ 
+ Gralloc3Mapper::Gralloc3Mapper() {
+-    mMapper = IMapper::getService();
++    mMapper = IMapper::tryGetService();
+     if (mMapper == nullptr) {
+         ALOGW("mapper 3.x is not supported");
+         return;
+diff --git a/libs/ui/Gralloc4.cpp b/libs/ui/Gralloc4.cpp
+index 499bc2c734..8c46ac241b 100644
+--- a/libs/ui/Gralloc4.cpp
++++ b/libs/ui/Gralloc4.cpp
+@@ -95,7 +95,7 @@ void Gralloc4Mapper::preload() {
+ }
+ 
+ Gralloc4Mapper::Gralloc4Mapper() {
+-    mMapper = IMapper::getService();
++    mMapper = IMapper::tryGetService();
+     if (mMapper == nullptr) {
+         ALOGI("mapper 4.x is not supported");
+         return;

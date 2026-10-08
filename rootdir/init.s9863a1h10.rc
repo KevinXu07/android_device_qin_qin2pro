@@ -70,17 +70,11 @@ on property:init.svc.adbd=stopped
 on property:sys.usb.config=adb && property:sys.usb.configfs=1
     start adbd
 
-on property:sys.usb.ffs.ready=1 && property:sys.usb.config=adb && property:sys.usb.configfs=1
-    write /config/usb_gadget/g1/configs/b.1/strings/0x409/configuration "adb"
-    rm /config/usb_gadget/g1/configs/b.1/f1
-    rm /config/usb_gadget/g1/configs/b.1/f2
-    rm /config/usb_gadget/g1/configs/b.1/f3
-    symlink /config/usb_gadget/g1/functions/ffs.adb /config/usb_gadget/g1/configs/b.1/f1
-    write /config/usb_gadget/g1/UDC ${sys.usb.controller}
-    setprop sys.usb.state ${sys.usb.config}
-
 on property:sys.boot_completed=1
     exec - root root -- /system/bin/touch /dev/qin_boot_ok
 
 on boot
+    # Start diagnostic ADB even while framework services restart.
+    setprop sys.usb.config adb
+    start adbd
     exec - root root -- /system/bin/sh -c "echo reached > /data/boot_reached.txt; sync; dmesg > /data/kmsg_boot.txt; getprop > /data/props.txt; cat /proc/mounts > /data/mounts.txt; cat /config/usb_gadget/g1/UDC > /data/udc.txt 2>&1; getprop sys.usb.state >> /data/udc.txt; getprop ro.serialno >> /data/udc.txt; sync; sleep 30; getprop init.svc.adbd > /data/late.txt; getprop sys.usb.ffs.ready >> /data/late.txt; getprop sys.usb.state >> /data/late.txt; cat /config/usb_gadget/g1/UDC >> /data/late.txt 2>&1; ps -A | grep -i adb >> /data/late.txt; ls -la /dev/usb-ffs /dev/usb-ffs/adb >> /data/late.txt 2>&1; ls -la /config/usb_gadget/g1/functions >> /data/late.txt; ls -la /config/usb_gadget/g1/configs/b.1 >> /data/late.txt; dmesg | tail -200 > /data/kmsg_late.txt; sync"

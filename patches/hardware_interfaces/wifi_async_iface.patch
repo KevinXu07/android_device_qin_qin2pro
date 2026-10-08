@@ -1,0 +1,23 @@
+diff --git a/wifi/1.5/default/wifi_legacy_hal.cpp b/wifi/1.5/default/wifi_legacy_hal.cpp
+index 5074252d3..cf8b2b1db 100644
+--- a/wifi/1.5/default/wifi_legacy_hal.cpp
++++ b/wifi/1.5/default/wifi_legacy_hal.cpp
+@@ -1483,8 +1483,16 @@ wifi_interface_handle WifiLegacyHal::getIfaceHandle(
+     const std::string& iface_name) {
+     const auto iface_handle_iter = iface_name_to_handle_.find(iface_name);
+     if (iface_handle_iter == iface_name_to_handle_.end()) {
+-        LOG(ERROR) << "Unknown iface name: " << iface_name;
+-        return nullptr;
++        // sprdwl registers wlan0 asynchronously after firmware handshake, so
++        // the initial enumeration can run before the netdev exists. Refresh
++        // the handle table once and retry before giving up.
++        retrieveIfaceHandles();
++        const auto retry_iter = iface_name_to_handle_.find(iface_name);
++        if (retry_iter == iface_name_to_handle_.end()) {
++            LOG(ERROR) << "Unknown iface name: " << iface_name;
++            return nullptr;
++        }
++        return retry_iter->second;
+     }
+     return iface_handle_iter->second;
+ }

@@ -1,0 +1,8 @@
+// SPDX-License-Identifier: Apache-2.0
+cc_library_shared {
+    name: "hwcomposer.sp9863a",
+    defaults: ["hwcomposer.drm_defaults"],
+    whole_static_libs: ["drm_hwcomposer"],
+    srcs: ["BufferInfoQin.cpp"],
+    compile_multilib: "both",
+}
