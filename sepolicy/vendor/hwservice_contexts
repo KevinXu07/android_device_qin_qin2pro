@@ -1,0 +1,2 @@
+# sprd vendor HAL services
+vendor.sprd.hardware.                u:object_r:sprd_hwservice:s0

@@ -1,0 +1,5 @@
+# torch via kernel led-class driver (ocp8137) labelled sysfs_torch
+allow hal_light_default sysfs_leds:dir { getattr open read search };
+allow hal_light_default sysfs_leds: file { getattr open read write append lock map create unlink rename setattr watch watch_reads };
+allow hal_light_default sysfs_torch:dir { getattr open read search };
+allow hal_light_default sysfs_torch: file { getattr open read write append lock map create unlink rename setattr watch watch_reads };

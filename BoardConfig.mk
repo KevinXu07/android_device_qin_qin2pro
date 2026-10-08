@@ -133,3 +133,6 @@ TARGET_NO_KERNEL := false
 TWRP_INCLUDE_LOGCAT := false
 BUILD_BROKEN_ELF_PREBUILT_PRODUCT_COPY_FILES := true
 BUILD_BROKEN_DUP_RULES := true
+
+# Device SELinux policy (sprd vendor daemons, WCN/BT/wifi, torch, sprd HALs)
+BOARD_VENDOR_SEPOLICY_DIRS += device/qin/qin2pro/sepolicy/vendor

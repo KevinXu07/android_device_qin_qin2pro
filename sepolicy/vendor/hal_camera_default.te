@@ -1,0 +1,4 @@
+# camera provider; kernel dcam/csi absent so this is mostly inert
+allow hal_camera_default sprd_device:chr_file rw_file_perms;
+allow hal_camera_default video_device:chr_file rw_file_perms;
+allow hal_camera_default vendor_file:file { getattr map open read };

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Device overlay for Qin 2 Pro -->
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <!-- Report a navigation bar so SystemUI creates the NavigationBar window.
+         Without it EdgeBackGestureHandler never attaches: no edge-swipe
+         monitor, no side back gesture, and Settings hides System navigation. -->
+    <bool name="config_showNavigationBar">true</bool>
+</resources>

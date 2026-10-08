@@ -1,0 +1,7 @@
+# sprd vendor properties
+vendor.sprd.                 u:object_r:sprd_prop:s0
+persist.sprd.                u:object_r:sprd_prop:s0
+sys.sprd.                    u:object_r:sprd_prop:s0
+ro.sprd.                     u:object_r:sprd_prop:s0
+persist.vendor.sys.wcn.      u:object_r:sprd_prop:s0
+persist.vendor.sys.wcnreset  u:object_r:sprd_prop:s0

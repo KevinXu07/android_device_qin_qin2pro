@@ -1,0 +1,12 @@
+# sprd BT: HCI over /dev/ttyBT0, firmware/config files under /vendor + /data
+allow hal_bluetooth_default sprd_bt_dev:chr_file rw_file_perms;
+allow hal_bluetooth_default sprd_device:chr_file rw_file_perms;
+allow hal_bluetooth_default sprd_data_file: dir { getattr open read write search add_name remove_name reparent rmdir lock watch watch_reads setattr create };
+allow hal_bluetooth_default sprd_data_file: file { getattr open read write append lock map create unlink rename setattr watch watch_reads };
+allow hal_bluetooth_default sprd_data_file: lnk_file { getattr open read create unlink rename setattr lock };
+allow hal_bluetooth_default sprd_prop:property_service set;
+allow hal_bluetooth_default vendor_data_file: dir { getattr open read write search add_name remove_name reparent rmdir lock watch watch_reads setattr create };
+allow hal_bluetooth_default vendor_data_file: file { getattr open read write append lock map create unlink rename setattr watch watch_reads };
+allow hal_bluetooth_default vendor_data_file: lnk_file { getattr open read create unlink rename setattr lock };
+allow hal_bluetooth_default vendor_file:file { getattr map open read };
+allow hal_bluetooth_default self: netlink_socket { create getattr setattr read write append lock bind connect listen accept getopt setopt shutdown map };

@@ -1,0 +1,21 @@
+cc_library_shared {
+    name: "libwifi-hal-sprd",
+    vendor: true,
+    srcs: [
+        "wifi_hal_shim.c",
+        "shim_stubs.S",
+    ],
+    shared_libs: [
+        "libdl",
+        "liblog",
+    ],
+    include_dirs: [
+        "hardware/libhardware_legacy/include",
+    ],
+    arch: {
+        arm64: {
+            enabled: true,
+        },
+    },
+    compile_multilib: "64",
+}

@@ -22,6 +22,9 @@ PRODUCT_PACKAGES -= \
 PRODUCT_COPY_FILES += \
     $(DEVICE_PATH)/fstab.s9863a1h10:$(TARGET_COPY_OUT_SYSTEM)/etc/fstab.s9863a1h10
 
+# Device overlays (navbar enable for gesture navigation)
+PRODUCT_PACKAGE_OVERLAYS += $(DEVICE_PATH)/overlay
+
 # The recovery image rule copies recovery.fstab to /system/etc/recovery.fstab
 # and recovery/root into the ramdisk. /etc is a symlink to /system/etc.
 
@@ -108,5 +111,4 @@ PRODUCT_COPY_FILES += \
 # out GPU composition. Validated by comparing mixed and all-client output.
 PRODUCT_SYSTEM_PROPERTIES += \
     ro.surface_flinger.use_color_management=false \
-    persist.sys.strictmode.disable=1 \
     persist.sysui.strictmode=false

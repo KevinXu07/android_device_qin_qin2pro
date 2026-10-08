@@ -1,0 +1,53 @@
+# ===== Vendor tree defaults (merged /system/vendor layout) =====
+# Platform file_contexts leaves /system/vendor files as system_file, which
+# blocks every HAL from dlopening vendor libraries.  Label the whole vendor
+# subtree vendor_file; more specific entries below override it where needed.
+/system/vendor(/.*)?            u:object_r:vendor_file:s0
+
+# HAL impls loaded into the same process as their service
+/system/vendor/lib(64)?/hw(/.*)?   u:object_r:same_process_hal_file:s0
+/system/vendor/lib(64)?/libhidltransport\.so u:object_r:same_process_hal_file:s0
+/system/vendor/lib(64)?/libhwbinder\.so      u:object_r:same_process_hal_file:s0
+
+# ===== Service executables missing from platform file_contexts =====
+/system/vendor/bin/hw/android\.hardware\.bluetooth(\.a2dp)?@1\.0-service\.unisoc  u:object_r:hal_bluetooth_default_exec:s0
+/system/vendor/bin/hw/android\.hardware\.drm@1\.1-service\.(clearkey|widevine)    u:object_r:hal_drm_default_exec:s0
+/system/vendor/bin/hw/android\.hardware\.dumpstate@1\.0-service                   u:object_r:hal_dumpstate_default_exec:s0
+/system/vendor/bin/hw/android\.hardware\.usb@1\.1-service                         u:object_r:hal_usb_default_exec:s0
+/system/vendor/bin/hw/wpa_supplicant                                            u:object_r:hal_wifi_supplicant_default_exec:s0
+/system/vendor/bin/hw/tsupplicant                                               u:object_r:hal_wifi_supplicant_default_exec:s0
+/system/vendor/bin/hw/(sprd)?rild                                               u:object_r:rild_exec:s0
+
+# ===== sprd daemons and sprd HAL services: single lenient bring-up domain =====
+/system/vendor/bin/hw/vendor\.sprd\..*-service        u:object_r:sprd_vendor_exec:s0
+/system/vendor/bin/(aprctl|charge|connmgr|connmgr_cli|cp_diskserver|cplogctl|engpc|enhance_test|ext_data|factorytest|flush_slog_modem|gpsd|iqfeed|iwnpi|mlogservice|modem_control|modemd|netbox\.sh|newfs_msdos|otpd|phasecheckserver|power|refnotify|rpmbserver|slogmodem|sprdstorageproxyd|srtd|systemDebuggerd|thermald|tsupplicant|wcnd|wifi_mac_gen)  u:object_r:sprd_vendor_exec:s0
+/system/vendor/bin/(pvrdebug|pvrhtb2txt|pvrhtbd|pvrhwperf|pvrlogdump|pvrlogsplit|pvrtld)  u:object_r:sprd_vendor_exec:s0
+/system/vendor/bin/move_widevine_data\.sh             u:object_r:sprd_vendor_exec:s0
+
+# ===== Device nodes =====
+/dev/ttyBT[0-9]+           u:object_r:sprd_bt_dev:s0
+/dev/pipe(/.*)?            u:object_r:sprd_device:s0
+/dev/spipe[0-9]+           u:object_r:sprd_device:s0
+/dev/sblock.*              u:object_r:sprd_device:s0
+/dev/smsg[0-9]+            u:object_r:sprd_device:s0
+/dev/sprd.*                u:object_r:sprd_device:s0
+/dev/cpwcn.*               u:object_r:sprd_device:s0
+/dev/cp-.*                 u:object_r:sprd_device:s0
+/dev/radio.*               u:object_r:sprd_device:s0
+/dev/tsdevice.*            u:object_r:sprd_device:s0
+/dev/trusty.*              u:object_r:sprd_device:s0
+/dev/teepriv.*             u:object_r:sprd_device:s0
+/dev/pvr_sync              u:object_r:gpu_device:s0
+/dev/dri(/.*)?             u:object_r:gpu_device:s0
+
+# ===== sysfs =====
+/sys/class/leds/flashlight(/.*)?          u:object_r:sysfs_torch:s0
+/sys/class/leds/white:torch(/.*)?         u:object_r:sysfs_torch:s0
+/sys/class/thermal(/.*)?                  u:object_r:sprd_sysfs:s0
+/sys/devices/platform/.*wcn(/.*)?         u:object_r:sprd_sysfs:s0
+/sys/devices/virtual/misc/wcn(/.*)?       u:object_r:sprd_sysfs:s0
+
+# ===== sprd data dirs =====
+/data/misc/wcn(/.*)?         u:object_r:sprd_data_file:s0
+/data/wcn(/.*)?              u:object_r:sprd_data_file:s0
+/productinfo(/.*)?           u:object_r:sprd_data_file:s0

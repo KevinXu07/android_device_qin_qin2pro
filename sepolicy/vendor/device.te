@@ -1,0 +1,7 @@
+type sprd_device, dev_type;
+type sprd_bt_dev, dev_type;
+type sprd_sysfs, sysfs_type, fs_type;
+type sysfs_torch, sysfs_type, fs_type;
+type sprd_data_file, file_type, data_file_type;
+type sprd_prop, property_type, vendor_property_type, vendor_internal_property_type;
+type sprd_hwservice, hwservice_manager_type;

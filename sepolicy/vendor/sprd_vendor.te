@@ -1,0 +1,112 @@
+# Catch-all vendor domain for sprd proprietary daemons and
+# vendor.sprd.hardware.* HAL services. Bring-up policy: the platform stays
+# enforcing; this domain gets the pragmatic minimum needed by the blobs.
+
+type sprd_vendor, domain;
+typeattribute sprd_vendor halserverdomain;
+typeattribute sprd_vendor mlstrustedsubject;
+type sprd_vendor_exec, exec_type, vendor_file_type, file_type;
+domain_auto_trans(init, sprd_vendor_exec, sprd_vendor)
+type_transition sprd_vendor sprd_vendor_exec:file vendor_data_file;
+
+# self basics
+allow sprd_vendor self:process { fork sigchld sigkill sigstop signull signal getsched setsched getsession getpgid setpgid };
+allow sprd_vendor self:capability { chown fowner fsetid kill setgid setuid setpcap net_bind_service sys_nice ipc_lock };
+allow sprd_vendor self:capability2 { wake_alarm block_suspend };
+allow sprd_vendor self: fifo_file { getattr open read write append lock watch watch_reads };
+allow sprd_vendor self: socket { create getattr setattr read write append lock bind connect listen accept getopt setopt shutdown map };
+allow sprd_vendor self: netlink_socket { create getattr setattr read write append lock bind connect listen accept getopt setopt shutdown map };
+allow sprd_vendor self: netlink_route_socket { create getattr setattr read write append lock bind connect listen accept getopt setopt shutdown map };
+allow sprd_vendor self: netlink_kobject_uevent_socket { create getattr setattr read write append lock bind connect listen accept getopt setopt shutdown map };
+allow sprd_vendor self: netlink_selinux_socket { create getattr setattr read write append lock bind connect listen accept getopt setopt shutdown map };
+allow sprd_vendor self: unix_stream_socket { connectto { connectto create getattr setattr read write append lock bind connect listen accept getopt setopt shutdown } };
+allow sprd_vendor self: unix_dgram_socket { create getattr setattr read write append lock bind connect listen accept getopt setopt shutdown map };
+allow sprd_vendor self:fd use;
+allow sprd_vendor self:key search;
+
+# executing our own domain entrypoint + reading vendor libs (map, not exec)
+allow sprd_vendor sprd_vendor_exec:file { getattr map open read execute entrypoint };
+allow sprd_vendor vendor_file:file { getattr map open read };
+allow sprd_vendor vendor_file:dir { getattr open read search };
+allow sprd_vendor vendor_file:lnk_file { getattr open read };
+allow sprd_vendor same_process_hal_file:file { getattr map open read };
+allow sprd_vendor rootfs:dir { getattr open read search };
+allow sprd_vendor rootfs:file { getattr open read };
+allow sprd_vendor rootfs:lnk_file { getattr open read };
+
+# pseudo filesystems, read-only (write is coredomain/treble neverallowed)
+allow sprd_vendor tmpfs: dir { getattr open read write search add_name remove_name reparent rmdir lock watch watch_reads setattr create };
+allow sprd_vendor tmpfs: file { getattr open read write append lock map create unlink rename setattr watch watch_reads };
+allow sprd_vendor tmpfs: lnk_file { getattr open read create unlink rename setattr lock };
+allow sprd_vendor tmpfs:sock_file { create setattr getattr unlink };
+allow sprd_vendor tmpfs:fifo_file { create setattr getattr open read write unlink };
+allow sprd_vendor sysfs:dir { getattr open read search };
+allow sprd_vendor sysfs:file { getattr open read };
+allow sprd_vendor sysfs:lnk_file { getattr open read };
+allow sprd_vendor proc:dir { getattr open read search };
+allow sprd_vendor proc:file { getattr open read };
+allow sprd_vendor proc_net:file { getattr open read };
+allow sprd_vendor proc_modules:file { getattr open read };
+allow sprd_vendor pstorefs:dir { getattr open read search };
+allow sprd_vendor pstorefs:file { getattr open read };
+allow sprd_vendor selinuxfs:dir { getattr open read search };
+allow sprd_vendor selinuxfs:file { getattr open read };
+
+# /dev
+allow sprd_vendor devpts:chr_file { getattr open read write };
+allow sprd_vendor tty_device:chr_file { getattr open read };
+allow sprd_vendor serial_device:chr_file rw_file_perms;
+allow sprd_vendor ion_device:chr_file rw_file_perms;
+allow sprd_vendor gpu_device:chr_file rw_file_perms;
+allow sprd_vendor video_device:chr_file rw_file_perms;
+allow sprd_vendor uhid_device:chr_file rw_file_perms;
+allow sprd_vendor input_device:chr_file { getattr open read };
+allow sprd_vendor input_device:dir { getattr open read search };
+allow sprd_vendor nfc_device:chr_file rw_file_perms;
+allow sprd_vendor sensors_device:chr_file { getattr open read };
+allow sprd_vendor random_device:chr_file { getattr open read };
+allow sprd_vendor null_device:chr_file rw_file_perms;
+allow sprd_vendor zero_device:chr_file { getattr open read };
+allow sprd_vendor rtc_device:chr_file { getattr open read };
+allow sprd_vendor socket_device:sock_file { getattr write };
+allow sprd_vendor socket_device:dir { getattr open read search };
+
+# our own labelled devices / sysfs / data
+allow sprd_vendor sprd_device:chr_file rw_file_perms;
+allow sprd_vendor sprd_device:blk_file rw_file_perms;
+allow sprd_vendor sprd_bt_dev:chr_file rw_file_perms;
+allow sprd_vendor sprd_sysfs:dir { getattr open read search };
+allow sprd_vendor sprd_sysfs:file { getattr open read write append };
+allow sprd_vendor sprd_sysfs:lnk_file { getattr open read };
+allow sprd_vendor sysfs_torch:dir { getattr open read search };
+allow sprd_vendor sysfs_torch:file { getattr open read write append };
+allow sprd_vendor sprd_data_file: dir { getattr open read write search add_name remove_name reparent rmdir lock watch watch_reads setattr create };
+allow sprd_vendor sprd_data_file: file { getattr open read write append lock map create unlink rename setattr watch watch_reads };
+allow sprd_vendor sprd_data_file: lnk_file { getattr open read create unlink rename setattr lock };
+
+# /data/vendor
+allow sprd_vendor vendor_data_file: dir { getattr open read write search add_name remove_name reparent rmdir lock watch watch_reads setattr create };
+allow sprd_vendor vendor_data_file: file { getattr open read write append lock map create unlink rename setattr watch watch_reads };
+allow sprd_vendor vendor_data_file: lnk_file { getattr open read create unlink rename setattr lock };
+
+# binder / hwservices (halserverdomain gives hwbinder+hidl_base plumbing)
+binder_use(sprd_vendor)
+hwbinder_use(sprd_vendor)
+binder_call(sprd_vendor, hwservicemanager)
+allow sprd_vendor sprd_hwservice:hwservice_manager { find add };
+allow sprd_vendor hwservicemanager:binder { call transfer };
+allow sprd_vendor servicemanager:binder { call transfer };
+allow sprd_vendor servicemanager:dir { search };
+allow sprd_vendor servicemanager:file { getattr open read map };
+
+# properties (set only our own; read system/vendor default props via service)
+allow sprd_vendor property_socket:sock_file { write };
+allow sprd_vendor init:unix_stream_socket connectto;
+allow sprd_vendor init:unix_dgram_socket sendto;
+allow sprd_vendor sprd_prop:property_service set;
+unix_socket_connect(sprd_vendor, property, init)
+
+# logging
+allow sprd_vendor logd:unix_dgram_socket sendto;
+allow sprd_vendor logd:socket { read write getattr };
+

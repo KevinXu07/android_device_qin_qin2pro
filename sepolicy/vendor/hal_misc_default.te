@@ -1,0 +1,27 @@
+# misc sprd domains needing concrete small grants
+allow rild sprd_device:chr_file rw_file_perms;
+allow rild serial_device:chr_file rw_file_perms;
+allow rild vendor_file:file { getattr map open read };
+
+allow hal_drm_default vendor_file:file { getattr map open read };
+
+allow hal_health_default sysfs:dir { getattr open read search };
+allow hal_health_default sysfs:file { getattr open read };
+
+allow hal_graphics_composer_default gpu_device:chr_file rw_file_perms;
+allow hal_graphics_composer_default ion_device:chr_file rw_file_perms;
+
+allow hal_audio_default audio_device:chr_file rw_file_perms;
+allow hal_audio_default vendor_file:file { getattr map open read };
+
+allow hal_thermal_default sysfs:dir { getattr open read search };
+allow hal_thermal_default sysfs:file { getattr open read };
+allow hal_thermal_default sysfs_devices_system_cpu:dir { getattr open read search };
+allow hal_thermal_default sysfs_devices_system_cpu:file { getattr open read };
+allow hal_thermal_default vendor_file:file { getattr map open read };
+
+allow hal_sensors_default iio_device:chr_file rw_file_perms;
+allow hal_sensors_default vendor_file:file { getattr map open read };
+
+allow hal_gnss_default serial_device:chr_file rw_file_perms;
+allow hal_gnss_default vendor_file:file { getattr map open read };
