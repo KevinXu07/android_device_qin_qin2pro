@@ -1,3 +1,6 @@
+# WiFi
+PRODUCT_PACKAGES +=     wpa_supplicant     wpa_cli     hostapd     libwpa_client     android.hardware.wifi@1.0-service     libhidltransport     libhidltransport.vendor
+
 #
 # Copyright (C) 2026 The LineageOS Project
 #
@@ -24,6 +27,8 @@ PRODUCT_COPY_FILES += \
 
 # Treble / VINTF: A9 vendor under A12 platform, do not enforce manifest
 PRODUCT_ENFORCE_VINTF_MANIFEST_OVERRIDE := false
+DEVICE_MANIFEST_FILE += vendor/qin/qin2pro/proprietary/vendor/etc/vintf/manifest.xml
+DEVICE_MATRIX_FILE += vendor/qin/qin2pro/proprietary/vendor/etc/vintf/compatibility_matrix.xml
 PRODUCT_COMPATIBLE_PROPERTY_OVERRIDE := true
 
 # Audio: configuration comes from vendor
@@ -36,7 +41,45 @@ PRODUCT_BUILD_SUPER_PARTITION := false
 # crash under A12). Software gatekeeper + AOSP health 2.1 keep locksettings and
 # BatteryService alive; audio impl/effect/libeffects blobs in the vendor tree
 # have been replaced with AOSP builds (same install paths).
-PRODUCT_PACKAGES +=     android.hardware.gatekeeper@1.0-service.software     android.hardware.health@2.1-service     android.hardware.health@2.1-impl     android.hardware.radio.deprecated@1.0
+PRODUCT_PACKAGES +=     android.hardware.gatekeeper@1.0-service.software     android.hardware.health@2.1-service     android.hardware.health@2.1-impl     android.hardware.cas@1.2-service     android.hardware.radio.deprecated@1.0
+
+# 32-bit vendor variants of the HIDL/base libs needed by the stock 32-bit
+# audio service + audio.primary.sp9863a (prebuilt binaries carry no dep info,
+# so every NEEDED entry must be requested explicitly).
+PRODUCT_PACKAGES += \
+    android.hardware.audio@2.0.vendor \
+    android.hardware.audio@4.0.vendor \
+    android.hardware.audio.common@2.0.vendor \
+    android.hardware.audio.common@4.0.vendor \
+    android.hardware.audio.common-util.vendor \
+    android.hardware.audio.common@2.0-util.vendor \
+    android.hardware.audio.common@4.0-util.vendor \
+    android.hardware.audio.effect@2.0.vendor \
+    android.hardware.audio.effect@4.0.vendor \
+    android.hardware.bluetooth.a2dp@1.0.vendor \
+    android.hardware.soundtrigger@2.0.vendor \
+    android.hardware.soundtrigger@2.1.vendor \
+    android.hidl.allocator@1.0.vendor \
+    android.hidl.memory@1.0.vendor \
+    android.hardware.power@1.0.vendor \
+    android.hardware.power@1.1.vendor \
+    android.hardware.power@1.2.vendor \
+    libaudioutils.vendor \
+    libbase.vendor \
+    libbinder.vendor \
+    libc++.vendor \
+    libcutils.vendor \
+    libexpat.vendor \
+    libfmq.vendor \
+    libhardware.vendor \
+    libhardware_legacy.vendor \
+    libhidlbase.vendor \
+    libhidlmemory.vendor \
+    libhwbinder.vendor \
+    liblog.vendor \
+    libmedia_helper.vendor \
+    libtinyalsa.vendor \
+    libutils.vendor
 
 # Init scripts: device init at root (auto-imported as /init.<ro.hardware>.rc),
 # watchdog/PVR helper rc under /system/etc/init (top-level only is scanned).
