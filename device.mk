@@ -54,8 +54,10 @@ PRODUCT_PACKAGES += \
     android.hardware.audio.common-util.vendor \
     android.hardware.audio.common@2.0-util.vendor \
     android.hardware.audio.common@4.0-util.vendor \
+    android.hardware.audio@4.0-util.vendor \
     android.hardware.audio.effect@2.0.vendor \
     android.hardware.audio.effect@4.0.vendor \
+    android.hardware.audio.effect@4.0-util.vendor \
     android.hardware.bluetooth.a2dp@1.0.vendor \
     android.hardware.soundtrigger@2.0.vendor \
     android.hardware.soundtrigger@2.1.vendor \

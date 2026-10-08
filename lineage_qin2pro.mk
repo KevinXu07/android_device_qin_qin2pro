@@ -30,7 +30,8 @@ PRODUCT_SYSTEM_DEFAULT_PROPERTIES += \
     ro.debuggable=1 \
     ro.adb.secure=0 \
     persist.sys.usb.config=adb \
-    service.adb.root=1
+    service.adb.root=1 \
+    ro.hardware.egl=POWERVR_ROGUE
 
 ## Device identifier
 PRODUCT_NAME := lineage_qin2pro
