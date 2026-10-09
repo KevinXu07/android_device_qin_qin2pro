@@ -110,3 +110,7 @@ unix_socket_connect(sprd_vendor, property, init)
 allow sprd_vendor logd:unix_dgram_socket sendto;
 allow sprd_vendor logd:socket { read write getattr };
 
+
+# storageproxyd runs as tee domain (seclabel in storageproxyd_androidp.rc)
+# but its binary lives in /vendor/bin -> sprd_vendor_exec.
+allow tee sprd_vendor_exec:file { getattr open read execute entrypoint };

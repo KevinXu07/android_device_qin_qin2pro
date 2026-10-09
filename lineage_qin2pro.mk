@@ -14,6 +14,10 @@ $(call inherit-product, $(SRC_TARGET_DIR)/product/core_64_bit.mk)
 $(call inherit-product, $(SRC_TARGET_DIR)/product/full_base_telephony.mk)
 $(call inherit-product, $(SRC_TARGET_DIR)/product/product_launched_with_p.mk)
 
+# 1GB RAM device: Android Go defaults (low_ram, InProcessNetworkStack,
+# speed-profile system server, minimized debug info)
+$(call inherit-product, build/target/product/go_defaults.mk)
+
 # Inherit device configuration
 $(call inherit-product, device/qin/qin2pro/device.mk)
 
