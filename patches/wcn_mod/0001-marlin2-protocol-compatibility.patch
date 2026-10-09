@@ -1,0 +1,555 @@
+diff --git a/wlan/marlin3_pcie/cfg80211.c b/wlan/marlin3_pcie/cfg80211.c
+index 3c1ada2..effad51 100755
+--- a/wlan/marlin3_pcie/cfg80211.c
++++ b/wlan/marlin3_pcie/cfg80211.c
+@@ -776,6 +776,17 @@ static int sprdwl_cfg80211_add_key(struct wiphy *wiphy, struct net_device *ndev,
+ 				   struct key_params *params)
+ {
+ 	struct sprdwl_vif *vif = netdev_priv(ndev);
++#ifdef SIPC_SUPPORT
++	u8 key_seq[8] = { 0 };
++
++	/* cfg80211 CCMP supplies six bytes; do not read eight from that
++	 * allocation just because the firmware field is eight bytes wide.
++	 */
++	if (params->seq_len < 0 || params->seq_len > sizeof(key_seq))
++		return -EINVAL;
++	if (params->seq_len && params->seq)
++		memcpy(key_seq, params->seq, params->seq_len);
++#endif
+ 
+ 	vif->key_index[pairwise] = key_index;
+ 	vif->key_len[pairwise][key_index] = params->key_len;
+@@ -788,7 +799,12 @@ static int sprdwl_cfg80211_add_key(struct wiphy *wiphy, struct net_device *ndev,
+ 					       params->key, params->key_len);
+ 	else
+ 		return sprdwl_add_cipher_key(vif, pairwise, key_index,
+-					     params->cipher, params->seq,
++					     params->cipher,
++#ifdef SIPC_SUPPORT
++					     key_seq,
++#else
++					     params->seq,
++#endif
+ 					     mac_addr);
+ }
+ 
+@@ -1088,8 +1104,12 @@ static int sprdwl_cfg80211_get_station(struct wiphy *wiphy,
+ {
+ 	struct sprdwl_vif *vif = netdev_priv(ndev);
+ 	struct sprdwl_cmd_get_station sta;
++#ifdef SIPC_SUPPORT
++	int i;
++#else
+ 	struct sprdwl_rate_info *tx_rate;
+ 	struct sprdwl_rate_info *rx_rate;
++#endif
+ 	int ret;
+ 
+ 	sinfo->filled |= BIT(NL80211_STA_INFO_TX_BYTES) |
+@@ -1106,6 +1126,22 @@ static int sprdwl_cfg80211_get_station(struct wiphy *wiphy,
+ 				 &sta);
+ 	if (ret)
+ 		goto out;
++#ifdef SIPC_SUPPORT
++	sinfo->signal = sta.signal;
++	sinfo->tx_failed = le32_to_cpu(sta.txfailed);
++	sinfo->filled |= BIT(NL80211_STA_INFO_SIGNAL) |
++		BIT(NL80211_STA_INFO_TX_FAILED);
++	/* Stock rate codes map to the existing 100-kbit/s rate table.
++	 * The reply has no RX rate, bandwidth or short-GI field.
++	 */
++	for (i = 0; i < ARRAY_SIZE(sprdwl_rates); i++) {
++		if (sprdwl_rates[i].hw_value == sta.txrate) {
++			sinfo->txrate.legacy = sprdwl_rates[i].bitrate;
++			sinfo->filled |= BIT(NL80211_STA_INFO_TX_BITRATE);
++			break;
++		}
++	}
++#else
+ 	tx_rate = &sta.tx_rate;
+ 	rx_rate = &sta.rx_rate;
+ 
+@@ -1186,6 +1222,7 @@ static int sprdwl_cfg80211_get_station(struct wiphy *wiphy,
+ 				tx_rate->mcs, tx_rate->flags,
+ 				sinfo->rxrate.legacy,
+ 				rx_rate->mcs, rx_rate->flags);
++#endif
+ out:
+ 	return ret;
+ }
+@@ -3611,7 +3648,9 @@ void sprdwl_setup_wiphy(struct wiphy *wiphy, struct sprdwl_priv *priv)
+ #ifdef RND_MAC_SUPPORT
+ 	if (!(wfa_cap & SPRDWL_WFA_CAP_NON_RAN_MAC)) {
+ 		wl_info("\tRandom MAC address scan default supported\n");
++#ifndef SIPC_SUPPORT
+ 		wiphy->features |= NL80211_FEATURE_SCAN_RANDOM_MAC_ADDR;
++#endif /* Marlin2 has no WIFI_CMD_RND_MAC; do not claim this feature. */
+ 	}
+ #endif
+ 	wiphy->features |= NL80211_FEATURE_CELL_BASE_REG_HINTS;
+@@ -3728,7 +3767,9 @@ void sprdwl_setup_wiphy(struct wiphy *wiphy, struct sprdwl_priv *priv)
+ 	wiphy_ext_feature_set(wiphy,
+ 		NL80211_EXT_FEATURE_SCHED_SCAN_RELATIVE_RSSI);
+ #endif
++#ifndef SIPC_SUPPORT
+ 	wiphy->features |= NL80211_FEATURE_SAE;
++#endif /* Marlin2 has no SAE command; avoid WPA2 -> SAE auto-upgrade. */
+ }
+ 
+ static void sprdwl_check_intf_ops(struct sprdwl_if_ops *ops)
+diff --git a/wlan/marlin3_pcie/cmdevt.c b/wlan/marlin3_pcie/cmdevt.c
+index 1e2e059..a48ea3e 100755
+--- a/wlan/marlin3_pcie/cmdevt.c
++++ b/wlan/marlin3_pcie/cmdevt.c
+@@ -1057,7 +1057,16 @@ int sprdwl_open_fw(struct sprdwl_priv *priv, u8 *vif_ctx_id,
+ {
+ 	struct sprdwl_msg_buf *msg;
+ 	struct sprdwl_cmd_open *p;
++#ifndef SIPC_SUPPORT
+ 	u16 rlen = 1;
++#else
++	/* Marlin2 uses the fixed interface mode in the common header;
++	 * unlike Marlin3 it does not allocate a context for an OPEN at 0.
++	 * Using 0 for both STA/P2P overwrites the STA MAC with the P2P MAC.
++	 * Stock sprdwl_init_fw passes mode as both header and payload.
++	 */
++	*vif_ctx_id = mode;
++#endif
+ 
+ 	msg = sprdwl_cmd_getbuf(priv, sizeof(*p), *vif_ctx_id,
+ 				SPRDWL_HEAD_RSP, WIFI_CMD_OPEN);
+@@ -1081,8 +1090,12 @@ int sprdwl_open_fw(struct sprdwl_priv *priv, u8 *vif_ctx_id,
+ 		wfa_cap = 0;
+ 	}
+ 
++#ifdef SIPC_SUPPORT
++	return sprdwl_cmd_send_recv(priv, msg, CMD_WAIT_TIMEOUT, NULL, NULL);
++#else
+ 	return sprdwl_cmd_send_recv(priv, msg, CMD_WAIT_TIMEOUT,
+ 				    vif_ctx_id, &rlen);
++#endif
+ }
+ 
+ int sprdwl_close_fw(struct sprdwl_priv *priv, u8 vif_ctx_id, u8 mode)
+@@ -1143,10 +1156,14 @@ int sprdwl_add_key(struct sprdwl_priv *priv, u8 vif_ctx_id, const u8 *key_data,
+ 	p->cypher_type = cypher_type;
+ 	p->key_len = key_len;
+ 	if (key_seq) {
++#ifdef SIPC_SUPPORT
++		memcpy(p->keyseq, key_seq, sizeof(p->keyseq));
++#else
+ 		if (SPRDWL_CIPHER_WAPI == cypher_type)
+ 			memcpy(p->keyseq, key_seq, WAPI_PN_SIZE);
+ 		else
+ 			memcpy(p->keyseq, key_seq, 8);
++#endif
+ 	}
+ 	if (mac_addr)
+ 		ether_addr_copy(p->mac, mac_addr);
+@@ -1223,21 +1240,72 @@ int sprdwl_set_rekey_data(struct sprdwl_priv *priv, u8 vif_ctx_id,
+ 	 return sprdwl_cmd_send_recv(priv, msg, CMD_WAIT_TIMEOUT, NULL, NULL);
+ }
+ 
++#ifdef SIPC_SUPPORT
++/* Marlin2_17A_RLS1_W19.37.2 host_config.c:2573 asserts when the
++ * host's Extended Capabilities IE (127) exceeds seven octets. Android
++ * 12 supplies a longer IE in probe/association requests. Preserve all
++ * other IEs, but do not advertise extension bits this firmware cannot
++ * merge into its management-frame template. NULL dst validates/sizes.
++ */
++static int sprdwl_marlin2_copy_ies(u8 *dst, const u8 *ie, u16 len)
++{
++	u16 pos = 0, out = 0;
++	u8 payload;
++
++	while (pos < len) {
++		if (len - pos < 2 || ie[pos + 1] > len - pos - 2)
++			return -EINVAL;
++		payload = ie[pos + 1];
++		if (ie[pos] == WLAN_EID_EXT_CAPABILITY && payload > 7)
++			payload = 7;
++		if (dst) {
++			dst[out] = ie[pos];
++			dst[out + 1] = payload;
++			memcpy(dst + out + 2, ie + pos + 2, payload);
++		}
++		out += payload + 2;
++		pos += ie[pos + 1] + 2;
++	}
++	return out;
++}
++#endif
++
+ int sprdwl_set_ie(struct sprdwl_priv *priv, u8 vif_ctx_id, u8 type,
+ 		  const u8 *ie, u16 len)
+ {
+ 	struct sprdwl_msg_buf *msg;
+ 	struct sprdwl_cmd_set_ie *p;
++	u16 wire_len = len;
++#ifdef SIPC_SUPPORT
++	bool legacy_ies = type == SPRDWL_IE_PROBE_REQ ||
++			  type == SPRDWL_IE_ASSOC_REQ;
++	int ret;
+ 
+-	msg = sprdwl_cmd_getbuf(priv, sizeof(*p) + len, vif_ctx_id,
++	if (legacy_ies) {
++		ret = sprdwl_marlin2_copy_ies(NULL, ie, len);
++		if (ret < 0)
++			return ret;
++		wire_len = ret;
++		if (wire_len != len)
++			wl_info("Marlin2 IE type %u: %u -> %u bytes (extcap limit)\n",
++				type, len, wire_len);
++	}
++#endif
++
++	msg = sprdwl_cmd_getbuf(priv, sizeof(*p) + wire_len, vif_ctx_id,
+ 				SPRDWL_HEAD_RSP, WIFI_CMD_SET_IE);
+ 	if (!msg)
+ 		return -ENOMEM;
+ 
+ 	p = (struct sprdwl_cmd_set_ie *)msg->data;
+ 	p->type = type;
+-	p->len = len;
+-	memcpy(p->data, ie, len);
++	p->len = cpu_to_le16(wire_len);
++#ifdef SIPC_SUPPORT
++	if (legacy_ies)
++		sprdwl_marlin2_copy_ies(p->data, ie, len);
++	else
++#endif
++		memcpy(p->data, ie, len);
+ 
+ 	return sprdwl_cmd_send_recv(priv, msg, CMD_WAIT_TIMEOUT, NULL, NULL);
+ }
+@@ -1310,6 +1378,10 @@ int sprdwl_get_station(struct sprdwl_priv *priv, u8 vif_ctx_id,
+ 	if (!msg)
+ 		return -ENOMEM;
+ 	ret = sprdwl_cmd_send_recv(priv, msg, CMD_WAIT_TIMEOUT, r_buf, &r_len);
++#ifdef SIPC_SUPPORT
++	if (!ret && r_len != sizeof(*sta))
++		return -EMSGSIZE;
++#endif
+ 
+ 	return ret;
+ }
+@@ -1337,16 +1409,28 @@ int sprdwl_scan(struct sprdwl_priv *priv, u8 vif_ctx_id,
+ 	struct sprdwl_cmd_scan *p;
+ 	struct sprdwl_cmd_rsp_state_code state;
+ 	u16 rlen;
+-	u32 data_len, chns_len_5g;
++	u32 data_len;
++#ifndef SIPC_SUPPORT
++	u32 chns_len_5g;
+ 
+ 	struct sprdwl_5g_chn {
+ 		u16 n_5g_chn;
+ 		u16 chns[0];
+ 	} *ext_5g;
++#endif
+ 
++#ifdef SIPC_SUPPORT
++	/* Qin Marlin2 stock sprdwl_scan allocates exactly 10 + ssid_len
++	 * bytes (stock 4.4 module, 0x8710). It has no Marlin3 5 GHz tail.
++	 * No random-address flag is advertised until the stock inline MAC
++	 * payload is implemented.
++	 */
++	data_len = sizeof(*p) + ssid_len;
++#else
+ 	chns_len_5g = chn_count_5g * sizeof(*chns_5g);
+ 	data_len = sizeof(*p) + ssid_len + chns_len_5g +
+ 		sizeof(ext_5g->n_5g_chn);
++#endif
+ 	msg = sprdwl_cmd_getbuf(priv, data_len, vif_ctx_id,
+ 				SPRDWL_HEAD_RSP, WIFI_CMD_SCAN);
+ 	if (!msg)
+@@ -1359,6 +1443,7 @@ int sprdwl_scan(struct sprdwl_priv *priv, u8 vif_ctx_id,
+ 		p->ssid_len = cpu_to_le16(ssid_len);
+ 	}
+ 
++#ifndef SIPC_SUPPORT
+ 	ext_5g = (struct sprdwl_5g_chn *)(p->ssid + ssid_len);
+ 	if (chn_count_5g > 0) {
+ 		ext_5g->n_5g_chn = chn_count_5g;
+@@ -1366,6 +1451,7 @@ int sprdwl_scan(struct sprdwl_priv *priv, u8 vif_ctx_id,
+ 	} else {
+ 		ext_5g->n_5g_chn = 0;
+ 	}
++#endif
+ 
+ 	print_hex_dump_debug("scan hex:", DUMP_PREFIX_OFFSET,
+ 			     16, 1, p, data_len, true);
+@@ -2732,7 +2818,7 @@ unsigned short sprdwl_rx_rsp_process(struct sprdwl_priv *priv, u8 *msg)
+ 
+ 	/* 2048 use mac */
+ 	/*TODO here ctx_id range*/
+-	if (hdr->common.ctx_id > STAP_MODE_P2P_DEVICE ||
++	if (hdr->common.ctx_id > SPRDWL_RX_CTX_MAX ||
+ 		hdr->cmd_id > WIFI_CMD_MAX ||
+ 	    plen > 2048) {
+ 		wl_err("%s wrong CMD_RSP: ctx_id:%d;cmd_id:%d\n",
+@@ -3588,7 +3674,7 @@ unsigned short sprdwl_rx_event_process(struct sprdwl_priv *priv, u8 *msg)
+ 
+ 	ctx_id = hdr->common.ctx_id;
+ 	/*TODO ctx_id range*/
+-	if (ctx_id > STAP_MODE_P2P_DEVICE) {
++	if (ctx_id > SPRDWL_RX_CTX_MAX) {
+ 		wl_info("%s invalid ctx_id: %d\n", __func__, ctx_id);
+ 		return 0;
+ 	}
+diff --git a/wlan/marlin3_pcie/cmdevt.h b/wlan/marlin3_pcie/cmdevt.h
+index 9c3964e..5bff6d1 100755
+--- a/wlan/marlin3_pcie/cmdevt.h
++++ b/wlan/marlin3_pcie/cmdevt.h
+@@ -18,6 +18,13 @@
+ #ifndef __SPRDWL_CMD_H__
+ #define __SPRDWL_CMD_H__
+ 
++#ifdef SIPC_SUPPORT
++#define SPRDWL_RX_CTX_MAX (SPRDWL_MODE_MAX - 1)
++#else
++#define SPRDWL_RX_CTX_MAX STAP_MODE_P2P_DEVICE
++#endif
++
++
+ #include "msg.h"
+ #include <linux/math64.h>
+ #include <linux/pm_wakeup.h>
+@@ -399,7 +406,14 @@ struct sprdwl_cmd_add_key {
+ 	u8 key_index;
+ 	u8 pairwise;
+ 	u8 mac[ETH_ALEN];
++	#ifdef SIPC_SUPPORT
++	/* Marlin2 KEY has eight sequence bytes: cipher at payload offset 17,
++	 * key length at 18, and key material at 19 (including subcommand).
++	 */
++	u8 keyseq[8];
++#else
+ 	u8 keyseq[16];
++#endif
+ 	u8 cypher_type;
+ 	u8 key_len;
+ 	u8 value[0];
+@@ -469,12 +483,22 @@ struct sprdwl_rate_info {
+ 
+ /* WIFI_CMD_GET_STATION */
+ struct sprdwl_cmd_get_station {
++#ifdef SIPC_SUPPORT
++	/* Stock Marlin2 GET_STATION is eight bytes, not two rate_info. */
++	u8 txrate;
++	s8 signal;
++	s8 noise;
++	u8 reserved;
++	__le32 txfailed;
++#else
+ 	struct sprdwl_rate_info tx_rate;
+ 	s8 signal;
+ 	u8 noise;
+ 	u8 reserved;
+ 	__le32 txfailed;
+ 	struct sprdwl_rate_info rx_rate;
++
++#endif
+ } __packed;
+ 
+ /* WIFI_CMD_SET_CHANNEL */
+diff --git a/wlan/marlin3_pcie/main.c b/wlan/marlin3_pcie/main.c
+index ed10339..331ba30 100755
+--- a/wlan/marlin3_pcie/main.c
++++ b/wlan/marlin3_pcie/main.c
+@@ -235,6 +235,10 @@ static netdev_tx_t sprdwl_start_xmit(struct sk_buff *skb, struct net_device *nde
+ 	 * Workaround way: Put eap failure frame to high queue
+ 	 * by use tx mgmt cmd
+ 	 */
++#ifndef SIPC_SUPPORT
++	/* Marlin3 TX_DATA (72) does not exist in the Marlin2 firmware.
++	 * Marlin2 EAPOL uses the same inline data channel as Ethernet.
++	 */
+ 	/* send 802.1x or WAPI frame from cmd channel */
+ 	if (skb->protocol == cpu_to_be16(ETH_P_PAE) ||
+ 		skb->protocol == cpu_to_be16(WAPI_TYPE)) {
+@@ -249,6 +253,7 @@ static netdev_tx_t sprdwl_start_xmit(struct sk_buff *skb, struct net_device *nde
+ 		if (!ret)
+ 			return NETDEV_TX_OK;
+ 	}
++#endif
+ 
+ 	/*do not send packet before connected*/
+ 	if ((vif->mode == SPRDWL_MODE_STATION && vif->sm_state != SPRDWL_CONNECTED) ||
+@@ -304,6 +309,23 @@ static netdev_tx_t sprdwl_start_xmit(struct sk_buff *skb, struct net_device *nde
+ 	/* sprdwl_send_data: offset use 2 for cp bytes align */
+ 	ret = sprdwl_send_data(vif, msg, skb, 2);
+ #else
++#ifdef SIPC_SUPPORT
++	if (intf->priv->hw_type == SPRDWL_HW_SIPC) {
++		unsigned int packet_len = skb->len;
++
++		ret = sprdwl_send_data(vif, msg, skb, 0);
++		if (ret) {
++			ndev->stats.tx_dropped++;
++			dev_kfree_skb(skb);
++			sprdwl_intf_free_msg_buf(vif->priv, msg);
++		} else {
++			ndev->stats.tx_packets++;
++			ndev->stats.tx_bytes += packet_len;
++		}
++		/* The inline copy completes ownership here; skb may be freed. */
++		return NETDEV_TX_OK;
++	}
++#endif
+ 	ret = sprdwl_send_data(vif, msg, skb, 0);
+ #endif /* SC2355_FTR */
+ 	if (ret) {
+diff --git a/wlan/marlin3_pcie/txrx.c b/wlan/marlin3_pcie/txrx.c
+index 33087d8..a333224 100755
+--- a/wlan/marlin3_pcie/txrx.c
++++ b/wlan/marlin3_pcie/txrx.c
+@@ -16,6 +16,9 @@
+  */
+ 
+ #include <linux/skbuff.h>
++#ifdef SIPC_SUPPORT
++#include <linux/swcnblk.h>
++#endif
+ 
+ #include "sprdwl.h"
+ #include "txrx.h"
+@@ -31,6 +34,56 @@
+ #include "core_sc2355.h"
+ #include "tx_msg_sc2355.h"
+ 
++#ifdef SIPC_SUPPORT
++/* Marlin2 consumes inline Ethernet frames in SIPC channel 8, not
++ * Marlin3 MSDU descriptors/physical-address lists. The Qin kernel's
++ * swcnblk pool uses a 32-byte transport reserve. Independently, stock
++ * sprdwl_send_data reserves 32 bytes after the data header/alignment
++ * for firmware to construct the 802.11 header; plen includes that space.
++ * On failure the caller retains both skb and msg; on success this
++ * synchronous copy has no outstanding DMA/firmware ownership of them.
++ */
++static int sprdwl_marlin2_send_data(struct sprdwl_vif *vif,
++				  struct sprdwl_msg_buf *msg,
++				  struct sk_buff *skb)
++{
++	struct swcnblk_blk blk;
++	struct sprdwl_data_hdr *hdr;
++	u16 len = sizeof(*hdr) + 2 + 32 + skb->len;
++	u8 channel = vif->mode <= SPRDWL_MODE_AP ? 8 : 9;
++	int ret;
++
++	if (skb_is_nonlinear(skb) && skb_linearize(skb))
++		return -ENOMEM;
++	if (skb->ip_summed == CHECKSUM_PARTIAL && skb_checksum_help(skb))
++		return -EINVAL;
++	ret = swcnblk_get(3, channel, &blk, 0);
++	if (ret)
++		return ret;
++	if (len + 32 > blk.length) {
++		swcnblk_put(3, channel, &blk);
++		return -EMSGSIZE;
++	}
++	memset(blk.addr, 0, 32);
++	hdr = (struct sprdwl_data_hdr *)((u8 *)blk.addr + 32);
++	memset(hdr, 0, sizeof(*hdr) + 2 + 32);
++	hdr->common.type = SPRDWL_TYPE_DATA;
++	hdr->common.ctx_id = vif->mode;
++	hdr->info1 = 2;
++	hdr->plen = cpu_to_le16(len);
++	memcpy((u8 *)hdr + sizeof(*hdr) + 2 + 32, skb->data, skb->len);
++	blk.length = len + 32;
++	ret = swcnblk_send(3, channel, &blk);
++	if (ret) {
++		swcnblk_put(3, channel, &blk);
++		return ret;
++	}
++	dev_kfree_skb_any(skb);
++	sprdwl_intf_free_msg_buf(vif->priv, msg);
++	return 0;
++}
++#endif
++
+ /* if err, the caller judge the skb if need free,
+  * here just free the msg buf to the freelist
+  */
+@@ -48,6 +101,10 @@ int sprdwl_send_data(struct sprdwl_vif *vif, struct sprdwl_msg_buf *msg,
+ 
+ 	intf = (struct sprdwl_intf *)vif->priv->hw_priv;
+ 
++#ifdef SIPC_SUPPORT
++	if (intf->priv->hw_type == SPRDWL_HW_SIPC)
++		return sprdwl_marlin2_send_data(vif, msg, skb);
++#endif
+ 	buf = skb->data;
+ /*TODO temp for MARLIN2*/
+ #ifndef SC2355_FTR
+@@ -128,7 +185,7 @@ void sprdwl_rx_send_cmd_process(struct sprdwl_priv *priv, void *data, int len,
+ 
+ 	if (unlikely(!priv)) {
+ 		wl_err("%s priv not init.\n", __func__);
+-	} else if (ctx_id > STAP_MODE_P2P_DEVICE) {
++	} else if (ctx_id > SPRDWL_RX_CTX_MAX) {
+ 		wl_err("%s [ctx_id %d]RX err\n", __func__, ctx_id);
+ 	} else {
+ 		vif = ctx_id_to_vif(priv, ctx_id);
+diff --git a/wlan/marlin3_pcie/vendor.c b/wlan/marlin3_pcie/vendor.c
+index ff86e8f..fae8ceb 100755
+--- a/wlan/marlin3_pcie/vendor.c
++++ b/wlan/marlin3_pcie/vendor.c
+@@ -446,6 +446,21 @@ static int sprdwl_vendor_get_llstat_handler(struct wiphy *wiphy,
+ {
+ 	struct sk_buff *reply_radio, *reply_iface;
+ 	struct sprdwl_llstat_data *llst;
++#ifdef SIPC_SUPPORT
++	/* Marlin2 LLSTAT is a packed 89-byte reply. ac_num and the signed
++	 * one-byte RSSI make it incompatible with the Marlin3 structure.
++	 */
++	struct {
++		__le32 beacon_rx;
++		s8 rssi_mgmt;
++		struct {
++			u8 ac_num;
++			__le32 tx_mpdu, rx_mpdu, mpdu_lost, retries;
++		} __packed ac[WIFI_AC_MAX];
++		__le32 on_time, tx_time, rx_time, on_time_scan;
++	} __packed *legacy;
++	struct sprdwl_llstat_data converted = { 0 };
++#endif
+ 	struct wifi_radio_stat *radio_st;
+ 	struct wifi_iface_stat *iface_st;
+ 	struct sprdwl_llstat_radio *dif_radio;
+@@ -472,9 +487,33 @@ static int sprdwl_vendor_get_llstat_handler(struct wiphy *wiphy,
+ 	if (ret)
+ 		goto out_put_fail;
+ 
++#ifdef SIPC_SUPPORT
++	legacy = (void *)r_buf;
++	if (r_len != sizeof(*legacy))
++		goto out_put_fail;
++	converted.bcn_rx_cnt = le32_to_cpu(legacy->beacon_rx);
++	converted.rssi_mgmt = legacy->rssi_mgmt;
++	converted.on_time = le32_to_cpu(legacy->on_time);
++	converted.on_time_scan = le32_to_cpu(legacy->on_time_scan);
++	converted.radio_tx_time = le32_to_cpu(legacy->tx_time);
++	converted.radio_rx_time = le32_to_cpu(legacy->rx_time);
++	for (i = 0; i < WIFI_AC_MAX; i++) {
++		converted.ac[i].tx_mpdu = le32_to_cpu(legacy->ac[i].tx_mpdu);
++		converted.ac[i].rx_mpdu = le32_to_cpu(legacy->ac[i].rx_mpdu);
++		converted.ac[i].tx_mpdu_lost = le32_to_cpu(legacy->ac[i].mpdu_lost);
++		converted.ac[i].tx_retries = le32_to_cpu(legacy->ac[i].retries);
++	}
++	llst = &converted;
++	/* As in the stock driver, return firmware totals; Android computes
++	 * deltas itself. Subtracting here causes repeated/reset counters.
++	 */
++	dif_radio->bcn_rx_cnt = llst->bcn_rx_cnt;
++	dif_radio->rssi_mgmt = llst->rssi_mgmt;
++	memcpy(dif_radio->ac, llst->ac, sizeof(dif_radio->ac));
++#else
+ 	llst = (struct sprdwl_llstat_data *)r_buf;
+-
+ 	calc_radio_dif(dif_radio, llst, &priv->pre_radio);
++#endif
+ 
+ 	/*set data for iface struct*/
+ 	iface_st->info.mode = vif->mode;

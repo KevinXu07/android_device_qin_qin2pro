@@ -47,7 +47,7 @@ TARGET_KERNEL_ADDITIONAL_CONFIG += CONFIG_TOUCHSCREEN_NVT_SPI=y
 TARGET_KERNEL_ADDITIONAL_CONFIG += CONFIG_TOUCHSCREEN_CHIPONE=y
 TARGET_KERNEL_ADDITIONAL_FLAGS := KCFLAGS=-Wno-error
 BOARD_KERNEL_IMAGE_NAME := Image
-BOARD_KERNEL_CMDLINE := console=ttyS1,115200n8 buildvariant=user androidboot.selinux=permissive
+BOARD_KERNEL_CMDLINE := console=ttyS1,115200n8 buildvariant=$(TARGET_BUILD_VARIANT) androidboot.selinux=enforcing
 BOARD_KERNEL_BASE := 0x00000000
 BOARD_KERNEL_OFFSET := 0x00008000
 BOARD_RAMDISK_OFFSET := 0x05400000
@@ -104,9 +104,18 @@ BOARD_VNDK_VERSION := current
 # Bluetooth (Unisoc wcn HAL from vendor)
 BOARD_HAVE_BLUETOOTH := true
 
-# WiFi: SPRD wcn driver is in-kernel cfg80211; use generic supplicant
+# WiFi: external Marlin2 SIPC module + kernel cfg80211 + AOSP supplicant
 WPA_SUPPLICANT_VERSION := VER_0_8_X
 BOARD_WLAN_DEVICE := wlan0
+# AOSP DriverTool must load the external Marlin2 SIPC module before the
+# vendor HAL waits for wlan0. The SPRD blob's ready callback only polls;
+# its own driver loader is not the one linked into this service.
+WIFI_DRIVER_MODULE_PATH := /vendor/lib/modules/sprdwl_ng.ko
+WIFI_DRIVER_MODULE_NAME := sprdwl_ng
+WIFI_DRIVER_FW_PATH_PARAM := /data/vendor/wifi/fwpath
+WIFI_DRIVER_FW_PATH_STA := sta_mode
+WIFI_DRIVER_FW_PATH_AP := ap_mode
+WIFI_DRIVER_FW_PATH_P2P := p2p_mode
 BOARD_WPA_SUPPLICANT_DRIVER := NL80211
 BOARD_HOSTAPD_DRIVER := NL80211
 WPA_SUPPLICANT_USE_HIDL := y

@@ -48,6 +48,13 @@
 /sys/devices/virtual/misc/wcn(/.*)?       u:object_r:sprd_sysfs:s0
 
 # ===== sprd data dirs =====
-/data/misc/wcn(/.*)?         u:object_r:sprd_data_file:s0
-/data/wcn(/.*)?              u:object_r:sprd_data_file:s0
+# Vendor WCN state belongs in /data/vendor. The legacy /data/wcn and
+# /data/misc/wcn paths are not created or used in this port; they must keep
+# platform core-data labels rather than the vendor sprd_data_file type.
+/data/vendor/wcn(/.*)?       u:object_r:sprd_data_file:s0
 /productinfo(/.*)?           u:object_r:sprd_data_file:s0
+
+# AOSP Wifi DriverTool loads this single external kernel module.
+/system/vendor/lib/modules/sprdwl_ng\.ko u:object_r:vendor_kernel_modules:s0
+# Legacy firmware-mode selector is a writable file, not sysfs.
+/data/vendor/wifi/fwpath u:object_r:qin_wifi_fwpath_file:s0

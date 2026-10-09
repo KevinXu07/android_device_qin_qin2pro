@@ -112,3 +112,8 @@ PRODUCT_COPY_FILES += \
 PRODUCT_SYSTEM_PROPERTIES += \
     ro.surface_flinger.use_color_management=false \
     persist.sysui.strictmode=false
+
+# HCI startup includes HIDL service lookup and the Marlin2 firmware boot.
+# Observed 3.574s with a 2.9s AOSP default; first firmware boots can be slow.
+# This only extends initialization, not individual HCI command deadlines.
+PRODUCT_SYSTEM_PROPERTIES += bluetooth.enable_timeout_ms=90000

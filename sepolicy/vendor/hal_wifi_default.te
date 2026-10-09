@@ -8,3 +8,11 @@ allow hal_wifi_default sprd_prop:property_service set;
 allow hal_wifi_default vendor_file:file { getattr map open read };
 allow hal_wifi_default self: netlink_socket { create getattr setattr read write append lock bind connect listen accept getopt setopt shutdown map };
 allow hal_wifi_default self: netlink_route_socket { create getattr setattr read write append lock bind connect listen accept getopt setopt shutdown map };
+
+# DriverTool uses finit_module/delete_module for sprdwl_ng. Keep module
+# loading scoped to vendor_kernel_modules (only this module is relabeled).
+allow hal_wifi_default self:global_capability_class_set sys_module;
+allow hal_wifi_default vendor_kernel_modules:file r_file_perms;
+allow hal_wifi_default vendor_kernel_modules:system module_load;
+
+allow hal_wifi_default qin_wifi_fwpath_file:file rw_file_perms;
