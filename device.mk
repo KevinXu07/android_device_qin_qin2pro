@@ -62,6 +62,9 @@ PRODUCT_PACKAGES += \
     android.hardware.audio.effect@4.0.vendor \
     android.hardware.audio.effect@4.0-util.vendor \
     android.hardware.bluetooth.a2dp@1.0.vendor \
+    android.hardware.thermal@1.1.vendor \
+    android.hardware.usb@1.0.vendor \
+    android.hardware.usb@1.1.vendor \
     android.hardware.soundtrigger@2.0.vendor \
     android.hardware.soundtrigger@2.1.vendor \
     android.hidl.allocator@1.0.vendor \
@@ -96,6 +99,28 @@ PRODUCT_COPY_FILES +=     $(DEVICE_PATH)/configs/android.hardware.consumerir.xml
 
 # DRM HWC with the stock IMG handle ABI; SPRD DPU cannot decode IMG FBCDC.
 PRODUCT_PACKAGES += hwcomposer.sp9863a
+# HIDL interface/support libs needed inside the vendor linker
+# namespace (not VNDK-whitelisted). Fixes SF hwcomposer abort,
+# bluetooth/gnss/drm/ril service linker failures.
+PRODUCT_PACKAGES += \
+    android.hardware.graphics.composer@2.1.vendor \
+    android.hardware.bluetooth@1.0.vendor \
+    android.hardware.gnss@1.0.vendor \
+    android.hardware.gnss@1.1.vendor \
+    android.hardware.drm@1.0.vendor \
+    android.hardware.drm@1.1.vendor \
+    android.hardware.sensors@1.0.vendor \
+    libprotobuf-cpp-lite.vendor \
+    libkeymaster_messages.vendor \
+    libssl.vendor \
+    android.hardware.camera.common@1.0.vendor \
+    android.hardware.camera.device@1.0.vendor \
+    android.hardware.camera.device@3.2.vendor \
+    android.hardware.camera.device@3.3.vendor \
+    android.hardware.camera.device@3.4.vendor \
+    android.hardware.camera.provider@2.4.vendor
+
+
 PRODUCT_COPY_FILES += \
     $(DEVICE_PATH)/configs/powervr.ini:$(TARGET_COPY_OUT_SYSTEM)/vendor/etc/powervr.ini
 
