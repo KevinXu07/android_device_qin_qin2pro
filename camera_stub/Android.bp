@@ -1,0 +1,17 @@
+// Stub camera module for Qin 2 Pro.
+// Provides a single non-openable BACK camera with a working flash unit
+// so CameraService exposes torch mode, backed by the torch LED sysfs node.
+cc_library_shared {
+    name: "camera.sp9863a",
+    vendor: true,
+    relative_install_path: "hw",
+    compile_multilib: "both",
+    srcs: ["camera_stub.c"],
+    shared_libs: [
+        "libcamera_metadata",
+        "libhardware",
+        "liblog",
+        "libcutils",
+    ],
+    cflags: ["-Wall", "-Wextra"],
+}

@@ -142,3 +142,8 @@ PRODUCT_SYSTEM_PROPERTIES += \
 # Observed 3.574s with a 2.9s AOSP default; first firmware boots can be slow.
 # This only extends initialization, not individual HCI command deadlines.
 PRODUCT_SYSTEM_PROPERTIES += bluetooth.enable_timeout_ms=90000
+
+# Qin camera stub (torch-capable fake camera) + AOSP legacy provider
+PRODUCT_PACKAGES += \
+    camera.sp9863a \
+    android.hardware.camera.provider@2.4-service_64
