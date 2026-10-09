@@ -8,6 +8,10 @@ on early-init
     mount none /system/product /product bind rec
 
 on init
+    # kill the serial-console shell: userdebug's init.rc starts it
+    # (ro.debuggable=1) and ActivityManagerService shows the
+    # "serial console enabled" performance warning while it runs.
+    stop console
     setprop sys.usb.controller musb-hdrc.0.auto
     setprop sys.usb.configfs 1
     mount configfs none /config
@@ -74,6 +78,10 @@ on property:sys.boot_completed=1
     exec - root root -- /system/bin/touch /dev/qin_boot_ok
 
 on boot
+    # Kill the debug serial console shell: AMS shows a
+    # "serial console enabled" notification while init.svc.console is
+    # running, and the UART console also costs boot time.
+    stop console
     # Start diagnostic ADB even while framework services restart.
     setprop sys.usb.config adb
     start adbd
