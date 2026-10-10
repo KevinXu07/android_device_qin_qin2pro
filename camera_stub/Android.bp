@@ -2,7 +2,7 @@
 // Provides a single non-openable BACK camera with a working flash unit
 // so CameraService exposes torch mode, backed by the torch LED sysfs node.
 cc_library_shared {
-    name: "camera.sp9863a",
+    name: "camera.sp9863a.stub",
     vendor: true,
     relative_install_path: "hw",
     compile_multilib: "both",

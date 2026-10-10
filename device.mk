@@ -145,5 +145,4 @@ PRODUCT_SYSTEM_PROPERTIES += bluetooth.enable_timeout_ms=90000
 
 # Qin camera stub (torch-capable fake camera) + AOSP legacy provider
 PRODUCT_PACKAGES += \
-    camera.sp9863a \
     android.hardware.camera.provider@2.4-service_64

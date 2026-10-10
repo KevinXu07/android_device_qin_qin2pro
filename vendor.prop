@@ -44,7 +44,10 @@ persist.sys.csvt=false
 persist.sys.vilte.socket=ap
 ro.vendor.otpdata.partitionpath=/mnt/vendor/productinfo
 ro.storage.flash_type=2
-ro.treble.enabled=true
+# This port uses a merged SAR system/vendor image without a separate ODM.
+# Keep the framework on the non-Treble consistency path until a complete
+# device manifest is shipped.
+ro.treble.enabled=false
 ro.vendor.vndk.version=1
 ro.sf.lcd_density=307
 ro.opengles.version=196610

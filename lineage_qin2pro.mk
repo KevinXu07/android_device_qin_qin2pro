@@ -44,6 +44,12 @@ PRODUCT_BRAND := Qin
 PRODUCT_MODEL := Qin 2 Pro
 PRODUCT_MANUFACTURER := DuoQin
 
+# The merged system/vendor layout is built in separate image steps.  Use one
+# stable fingerprint so userdebug Build.isBuildConsistent() cannot report a
+# false mismatch when the two partition build.prop files have different build
+# timestamps.
+BUILD_FINGERPRINT := Qin/lineage_qin2pro/qin2pro:12/SQ3A.220705.004/qin2pro:$(TARGET_BUILD_VARIANT)/test-keys
+
 PRODUCT_BUILD_PROP_OVERRIDES += \
     TARGET_DEVICE=s9863a1h10 \
     PRODUCT_NAME=s9863a1h10_Natv \
