@@ -1,6 +1,7 @@
 # LOS repository path followed by patch path relative to this directory.
 frameworks/native frameworks_native/optional_mapper_probe.patch
 frameworks/native frameworks_native/legacy_surface_constructor.patch
+frameworks/native frameworks_native/legacy_camera_lock_abi.patch
 frameworks/base frameworks_base/systemui_strictmode_override.patch
 frameworks/av frameworks_av/audio_hal_version_sentinel.patch
 hardware/interfaces hardware_interfaces/legacy_audio_abi.patch

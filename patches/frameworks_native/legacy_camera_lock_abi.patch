@@ -1,0 +1,47 @@
+diff --git a/libs/ui/GraphicBuffer.cpp b/libs/ui/GraphicBuffer.cpp
+index 3732fee7f2..994aa0bfac 100644
+--- a/libs/ui/GraphicBuffer.cpp
++++ b/libs/ui/GraphicBuffer.cpp
+@@ -238,6 +238,17 @@ status_t GraphicBuffer::initWithHandle(const native_handle_t* inHandle, HandleWr
+     return NO_ERROR;
+ }
+ 
++// Legacy P-era vendor camera libraries use the three-argument member ABI.
++// Export its old mangled name without adding an ambiguous public overload.
++extern "C" status_t GraphicBuffer_lock_legacy(
++        GraphicBuffer* self, uint32_t inUsage, void** vaddr)
++        __asm__("_ZN7android13GraphicBuffer4lockEjPPv");
++
++extern "C" status_t GraphicBuffer_lock_legacy(
++        GraphicBuffer* self, uint32_t inUsage, void** vaddr) {
++    return self->lock(inUsage, vaddr, nullptr, nullptr);
++}
++
+ status_t GraphicBuffer::lock(uint32_t inUsage, void** vaddr, int32_t* outBytesPerPixel,
+                              int32_t* outBytesPerStride) {
+     const Rect lockBounds(width, height);
+diff --git a/libs/ui/GraphicBufferMapper.cpp b/libs/ui/GraphicBufferMapper.cpp
+index d20bd7a899..3b67361c6c 100644
+--- a/libs/ui/GraphicBufferMapper.cpp
++++ b/libs/ui/GraphicBufferMapper.cpp
+@@ -124,6 +124,20 @@ status_t GraphicBufferMapper::freeBuffer(buffer_handle_t handle)
+     return NO_ERROR;
+ }
+ 
++// Legacy P-era vendor camera HALs reference the four-argument lock symbol.
++// Keep this ABI bridge out of the C++ header so current callers do not see an
++// ambiguous overload; the old symbol forwards to the current implementation.
++extern "C" status_t GraphicBufferMapper_lock_legacy(
++        GraphicBufferMapper* self, buffer_handle_t handle, uint32_t usage,
++        const Rect& bounds, void** vaddr)
++        __asm__("_ZN7android19GraphicBufferMapper4lockEPK13native_handlejRKNS_4RectEPPv");
++
++extern "C" status_t GraphicBufferMapper_lock_legacy(
++        GraphicBufferMapper* self, buffer_handle_t handle, uint32_t usage,
++        const Rect& bounds, void** vaddr) {
++    return self->lock(handle, usage, bounds, vaddr, nullptr, nullptr);
++}
++
+ status_t GraphicBufferMapper::lock(buffer_handle_t handle, uint32_t usage, const Rect& bounds,
+                                    void** vaddr, int32_t* outBytesPerPixel,
+                                    int32_t* outBytesPerStride) {
