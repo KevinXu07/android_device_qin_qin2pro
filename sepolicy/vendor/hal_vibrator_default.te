@@ -1,0 +1,4 @@
+# Named SC27xx evdev device, FF upload/remove and effect playback.
+allow hal_vibrator_default input_device:dir r_dir_perms;
+allow hal_vibrator_default input_device:chr_file rw_file_perms;
+allowxperm hal_vibrator_default input_device:chr_file ioctl { 0x4506 0x4580 0x4581 };

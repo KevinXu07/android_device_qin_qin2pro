@@ -146,3 +146,6 @@ PRODUCT_SYSTEM_PROPERTIES += bluetooth.enable_timeout_ms=90000
 # Qin camera stub (torch-capable fake camera) + AOSP legacy provider
 PRODUCT_PACKAGES += \
     android.hardware.camera.provider@2.4-service_64
+
+# SC27xx vibrator is an input-FF device, exposed through a real HIDL HAL.
+PRODUCT_PACKAGES += android.hardware.vibrator@1.0-service.qin

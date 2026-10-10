@@ -8,7 +8,9 @@ The series records the platform changes used by the tested LOS19.1 build:
 
 - frameworks/native: optional mapper 3/4 probes and the old Surface constructor
   symbol required by the stock IMS JNI library, plus legacy camera GraphicBuffer
-  lock symbols with the original member-function calling convention.
+  lock symbols with the original member-function calling convention, and
+  scoped P Fence constructor/wait aliases paired with the camera blob
+  patches documented in the vendor repository's patches/README.md.
 - frameworks/base: let explicit `persist.sysui.strictmode=false` disable
   SystemUI's eng flashing diagnostics.
 - frameworks/av: stop audio HAL version iteration at the null sentinel.

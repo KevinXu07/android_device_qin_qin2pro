@@ -9,3 +9,4 @@ hardware/interfaces hardware_interfaces/wifi_async_iface.patch
 hardware/interfaces hardware_interfaces/bluetooth_close_guard.patch
 hardware/interfaces hardware_interfaces/gatekeeper_missing_hal_guard.patch
 system/security system_security/0001-keystore2-tolerate-missing-TEE-keymint.patch
+frameworks/native frameworks_native/legacy_camera_fence_abi.patch

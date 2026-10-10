@@ -1,0 +1,19 @@
+cc_binary {
+    name: "android.hardware.vibrator@1.0-service.qin",
+    vendor: true,
+    relative_install_path: "hw",
+    compile_multilib: "64",
+    srcs: ["Vibrator.cpp"],
+    init_rc: ["vibrator-qin.rc"],
+    vintf_fragments: ["vibrator-qin.xml"],
+    shared_libs: ["libhidlbase", "liblog", "libutils", "android.hardware.vibrator@1.0"],
+    cflags: ["-Wall", "-Wextra", "-Werror"],
+}
+
+cc_binary {
+    name: "qin_vibrator_probe",
+    vendor: true,
+    compile_multilib: "64",
+    srcs: ["probe.c"],
+    cflags: ["-Wall", "-Wextra", "-Werror"],
+}

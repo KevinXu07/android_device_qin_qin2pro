@@ -1,0 +1,35 @@
+--- a/libs/ui/Fence.cpp
++++ b/libs/ui/Fence.cpp
+@@ -35,6 +35,32 @@
+ 
+ namespace android {
+ 
++
++// The P-era SPRD camera blob allocates an 8-byte LightRefBase<Fence> and
++// inlines its destructor as close(fd). A12 Fence's unique_fd constructor
++// tags the fd, so mixing that constructor with the old inline destructor
++// aborts in fdsan. Only this blob's C1/wait imports are renamed to FencP;
++// current platform Fence callers keep their usual ownership checks.
++struct QinLegacyFence {
++    uint32_t references;
++    int fd;
++};
++static_assert(sizeof(QinLegacyFence) == 8, "P Fence ABI");
++
++extern "C" void qin_legacy_fence_construct(QinLegacyFence* self, int fd)
++        __asm__("_ZN7android5FencPC1Ei");
++extern "C" void qin_legacy_fence_construct(QinLegacyFence* self, int fd) {
++    self->references = 0;
++    self->fd = fd;
++}
++
++extern "C" status_t qin_legacy_fence_wait(QinLegacyFence* self, int timeout)
++        __asm__("_ZN7android5FencP4waitEi");
++extern "C" status_t qin_legacy_fence_wait(QinLegacyFence* self, int timeout) {
++    if (self->fd == -1) return NO_ERROR;
++    return sync_wait(self->fd, timeout) < 0 ? -errno : NO_ERROR;
++}
++
+ const sp<Fence> Fence::NO_FENCE = sp<Fence>(new Fence);
+ 
+ Fence::Fence(int fenceFd) :

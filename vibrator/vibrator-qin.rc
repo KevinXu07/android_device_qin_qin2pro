@@ -1,0 +1,5 @@
+service vendor.vibrator-qin /vendor/bin/hw/android.hardware.vibrator@1.0-service.qin
+    interface android.hardware.vibrator@1.0::IVibrator default
+    class hal
+    user system
+    group system input
