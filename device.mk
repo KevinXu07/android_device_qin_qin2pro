@@ -28,8 +28,10 @@ PRODUCT_PACKAGE_OVERLAYS += $(DEVICE_PATH)/overlay
 # The recovery image rule copies recovery.fstab to /system/etc/recovery.fstab
 # and recovery/root into the ramdisk. /etc is a symlink to /system/etc.
 
-# Treble / VINTF: A9 vendor under A12 platform, do not enforce manifest
-PRODUCT_ENFORCE_VINTF_MANIFEST_OVERRIDE := false
+# The manifest lists only HALs shipped by this product.  Enforce it so
+# missing graphics HAL versions fail immediately instead of each client
+# waiting through hwservicemanager lazy-start timeouts.
+PRODUCT_ENFORCE_VINTF_MANIFEST_OVERRIDE := true
 DEVICE_MANIFEST_FILE += vendor/qin/qin2pro/proprietary/vendor/etc/vintf/manifest.xml
 DEVICE_MATRIX_FILE += vendor/qin/qin2pro/proprietary/vendor/etc/vintf/compatibility_matrix.xml
 PRODUCT_COMPATIBLE_PROPERTY_OVERRIDE := true
