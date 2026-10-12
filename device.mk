@@ -22,8 +22,8 @@ PRODUCT_PACKAGES -= \
 PRODUCT_COPY_FILES += \
     $(DEVICE_PATH)/fstab.s9863a1h10:$(TARGET_COPY_OUT_SYSTEM)/etc/fstab.s9863a1h10
 
-# Device overlays (navbar enable for gesture navigation)
-PRODUCT_PACKAGE_OVERLAYS += $(DEVICE_PATH)/overlay
+# Device overlays (navbar enable for gesture navigation); applied via
+# DEVICE_PACKAGE_OVERLAYS below so every consuming package sees them.
 
 # Shared-resource targets (e.g. lineageos.platform config_deviceHardwareKeys)
 # must be baked via DEVICE_PACKAGE_OVERLAYS: RROs do not propagate to the
@@ -167,6 +167,4 @@ PRODUCT_PACKAGES += android.hardware.lights-service.qin
 #   above are what apps actually see.
 # ButtonStringsOverlay: static RRO on org.lineageos.lineageparts renaming the
 #   assist section title to "AI key" / "AI 键" / "AI 鍵".
-PRODUCT_COPY_FILES += \
-    $(DEVICE_PATH)/prebuilts/overlay/HwKeysOverlay.apk:$(TARGET_COPY_OUT_PRODUCT)/overlay/HwKeysOverlay.apk \
-    $(DEVICE_PATH)/prebuilts/overlay/ButtonStringsOverlay.apk:$(TARGET_COPY_OUT_PRODUCT)/overlay/ButtonStringsOverlay.apk
+PRODUCT_PACKAGES += HwKeysOverlay ButtonStringsOverlay
