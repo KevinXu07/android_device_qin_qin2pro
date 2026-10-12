@@ -3,3 +3,8 @@ allow hal_light_default sysfs_leds:dir { getattr open read search };
 allow hal_light_default sysfs_leds: file { getattr open read write append lock map create unlink rename setattr watch watch_reads };
 allow hal_light_default sysfs_torch:dir { getattr open read search };
 allow hal_light_default sysfs_torch: file { getattr open read write append lock map create unlink rename setattr watch watch_reads };
+
+# Qin2Pro uses the panel backlight sysfs node for the AIDL light HAL.
+type sysfs_qin_backlight, fs_type, sysfs_type;
+allow hal_light_default sysfs_qin_backlight:dir { getattr open read search };
+allow hal_light_default sysfs_qin_backlight:file { getattr open read write };

@@ -1,0 +1,9 @@
+service vendor.lights-qin /vendor/bin/hw/android.hardware.lights-service.qin
+    class hal
+    user system
+    group system
+    shutdown critical
+
+on post-fs-data
+    chown system system /sys/class/backlight/sprd_backlight/brightness
+    chmod 0660 /sys/class/backlight/sprd_backlight/brightness

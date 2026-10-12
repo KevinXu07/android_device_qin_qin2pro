@@ -151,3 +151,7 @@ PRODUCT_PACKAGES += \
 
 # SC27xx vibrator is an input-FF device, exposed through a real HIDL HAL.
 PRODUCT_PACKAGES += android.hardware.vibrator@1.0-service.qin
+
+# Native panel backlight HAL; avoids stock light ABI and absent LED paths.
+PRODUCT_PACKAGES += android.hardware.lights-service.qin
+

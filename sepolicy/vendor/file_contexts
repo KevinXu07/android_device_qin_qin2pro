@@ -182,3 +182,6 @@
 /system/vendor/usr/keychars(/.*)?\.kcm                 u:object_r:vendor_keychars_file:s0
 /system/vendor/usr/idc(/.*)?\.idc                      u:object_r:vendor_idc_file:s0
 /system/vendor/bin/hw/android\.hardware\.vibrator@1\.0-service\.qin u:object_r:hal_vibrator_default_exec:s0
+
+/(vendor|system/vendor)/bin/hw/android\.hardware\.lights-service\.qin u:object_r:hal_light_default_exec:s0
+

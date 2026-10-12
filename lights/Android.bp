@@ -1,0 +1,11 @@
+cc_binary {
+    name: "android.hardware.lights-service.qin",
+    vendor: true,
+    relative_install_path: "hw",
+    compile_multilib: "64",
+    srcs: ["Lights.cpp"],
+    init_rc: ["lights-qin.rc"],
+    vintf_fragments: ["lights-qin.xml"],
+    shared_libs: ["libbase", "libbinder_ndk", "android.hardware.light-V1-ndk_platform"],
+    cflags: ["-Wall", "-Wextra", "-Werror"],
+}
