@@ -7,3 +7,9 @@ service vendor.lights-qin /vendor/bin/hw/android.hardware.lights-service.qin
 on post-fs-data
     chown system system /sys/class/backlight/sprd_backlight/brightness
     chmod 0660 /sys/class/backlight/sprd_backlight/brightness
+    chown system system /sys/class/leds/sc27xx:red/brightness
+    chown system system /sys/class/leds/sc27xx:red/trigger
+    chown system system /sys/class/leds/sc27xx:green/brightness
+    chown system system /sys/class/leds/sc27xx:green/trigger
+    chown system system /sys/class/leds/sc27xx:blue/brightness
+    chown system system /sys/class/leds/sc27xx:blue/trigger

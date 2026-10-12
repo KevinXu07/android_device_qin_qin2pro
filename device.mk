@@ -139,6 +139,17 @@ PRODUCT_VENDOR_PROPERTIES += vendor.hwc.drm.scale_with_gpu=1
 PRODUCT_COPY_FILES += \
     $(DEVICE_PATH)/rootdir/qin_gpu_debug.rc:$(TARGET_COPY_OUT_SYSTEM)/etc/init/qin_gpu_debug.rc
 
+# Delay the GL boot animation ~20s so zygote64 finishes its preload/GC-heavy
+# startup first; concurrent animation caused ART heap crashes on this 1.8GB
+# device. The script sleeps then execs the real bootanimation binary.
+PRODUCT_COPY_FILES += \
+    $(DEVICE_PATH)/prebuilts/bootanimation_delayed:$(TARGET_COPY_OUT_SYSTEM)/bin/bootanimation_delayed
+
+# Skipping the zygote graphics-driver preload frees tens of MB during boot
+# (both zygotes would otherwise load the PVR stack), giving the boot
+# animation headroom on this low-memory device.
+PRODUCT_SYSTEM_PROPERTIES += ro.zygote.disable_gl_preload=1
+
 # Legacy IMG EGL labels app buffers as linear; A12 color conversion washes
 # out GPU composition. Validated by comparing mixed and all-client output.
 PRODUCT_SYSTEM_PROPERTIES += \

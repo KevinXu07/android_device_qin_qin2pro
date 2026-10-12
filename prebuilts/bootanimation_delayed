@@ -1,0 +1,9 @@
+#!/system/bin/sh
+# Boot animation start delay. zygote64 does its heavy class-preload and
+# JIT/GC work in roughly the first 30s of boot; running the OpenGL boot
+# animation concurrently pushed the device past its memory limit and
+# crashed zygote (ART GC abort). Delaying the animation start lets the
+# preload finish first while still showing the animation for most of
+# the ~110s boot.
+sleep 20
+exec /system/bin/bootanimation

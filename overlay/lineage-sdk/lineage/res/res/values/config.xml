@@ -3,4 +3,7 @@
     <!-- Volume rocker and physical AI/assistant key. -->
     <integer name="config_deviceHardwareKeys">72</integer>
     <integer name="config_deviceHardwareWakeKeys">72</integer>
+
+    <!-- RGB notification LED + RGB battery LED + pulsating. -->
+    <integer name="config_deviceLightCapabilities">75</integer>
 </resources>
