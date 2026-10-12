@@ -150,6 +150,14 @@ PRODUCT_COPY_FILES += \
 # animation headroom on this low-memory device.
 PRODUCT_SYSTEM_PROPERTIES += ro.zygote.disable_gl_preload=1
 
+# The bootanimation binary intermittently hits a use-after-free inside its
+# GL render thread (~50% of cold boots). When the crash races an in-flight
+# commit, the DPU stops delivering vblank and SurfaceFlinger stalls, hanging
+# the boot entirely. Keep the animation disabled until the UAF is diagnosed
+# (libc.debug.malloc is armed on-device to capture the free-site stack).
+# To re-enable: remove this line (the delayed-wrapper infra stays).
+PRODUCT_SYSTEM_PROPERTIES += debug.sf.nobootanimation=1
+
 # Legacy IMG EGL labels app buffers as linear; A12 color conversion washes
 # out GPU composition. Validated by comparing mixed and all-client output.
 PRODUCT_SYSTEM_PROPERTIES += \
