@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Volume rocker and physical AI/assistant key. -->
+    <integer name="config_deviceHardwareKeys">72</integer>
+    <integer name="config_deviceHardwareWakeKeys">72</integer>
+</resources>

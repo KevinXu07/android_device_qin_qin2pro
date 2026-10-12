@@ -25,6 +25,11 @@ PRODUCT_COPY_FILES += \
 # Device overlays (navbar enable for gesture navigation)
 PRODUCT_PACKAGE_OVERLAYS += $(DEVICE_PATH)/overlay
 
+# Shared-resource targets (e.g. lineageos.platform config_deviceHardwareKeys)
+# must be baked via DEVICE_PACKAGE_OVERLAYS: RROs do not propagate to the
+# consumers of a shared resource package on this build.
+DEVICE_PACKAGE_OVERLAYS += $(DEVICE_PATH)/overlay
+
 # The recovery image rule copies recovery.fstab to /system/etc/recovery.fstab
 # and recovery/root into the ramdisk. /etc is a symlink to /system/etc.
 
@@ -155,3 +160,13 @@ PRODUCT_PACKAGES += android.hardware.vibrator@1.0-service.qin
 # Native panel backlight HAL; avoids stock light ABI and absent LED paths.
 PRODUCT_PACKAGES += android.hardware.lights-service.qin
 
+# AI key (gpio-keys kernel code 213 -> ASSIST; see vendor gpio-keys.kl).
+# HwKeysOverlay: static RRO on lineageos.platform setting
+#   config_deviceHardwareKeys/config_deviceHardwareWakeKeys = 72 as a fallback
+#   for targets that resolve the package directly; the baked overlay values
+#   above are what apps actually see.
+# ButtonStringsOverlay: static RRO on org.lineageos.lineageparts renaming the
+#   assist section title to "AI key" / "AI 键" / "AI 鍵".
+PRODUCT_COPY_FILES += \
+    $(DEVICE_PATH)/prebuilts/overlay/HwKeysOverlay.apk:$(TARGET_COPY_OUT_PRODUCT)/overlay/HwKeysOverlay.apk \
+    $(DEVICE_PATH)/prebuilts/overlay/ButtonStringsOverlay.apk:$(TARGET_COPY_OUT_PRODUCT)/overlay/ButtonStringsOverlay.apk
