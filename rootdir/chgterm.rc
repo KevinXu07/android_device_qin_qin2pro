@@ -1,0 +1,7 @@
+service chgterm /system/bin/sh /system/bin/chgterm4350.sh
+    class main
+    user root
+    group root
+
+on charger
+    start chgterm

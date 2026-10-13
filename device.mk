@@ -187,3 +187,12 @@ PRODUCT_PACKAGES += android.hardware.lights-service.qin
 # ButtonStringsOverlay: static RRO on org.lineageos.lineageparts renaming the
 #   assist section title to "AI key" / "AI 键" / "AI 鍵".
 PRODUCT_PACKAGES += HwKeysOverlay ButtonStringsOverlay
+
+# The stock kernel leaves the fan54015 charger at power-on defaults
+# (VOREG=4.2V, VSAFE clamps VOREG<=4.2V) and never applies the dtb battery
+# node's 4.35V rating, so the cell stops charging at ~91% SOC. This small
+# root daemon re-programs both registers from the dtb value and re-applies
+# after replug events reset them.
+PRODUCT_COPY_FILES += \
+    $(DEVICE_PATH)/rootdir/chgterm4350.sh:$(TARGET_COPY_OUT_SYSTEM)/bin/chgterm4350.sh \
+    $(DEVICE_PATH)/rootdir/chgterm.rc:$(TARGET_COPY_OUT_VENDOR)/etc/init/chgterm.rc
