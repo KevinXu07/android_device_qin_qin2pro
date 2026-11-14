@@ -12,7 +12,7 @@ BUS=4
 ADDR=0x6a
 REG_VOREG=0x2
 REG_SAFE=0x6
-DTB=/proc/device-tree/battery/constant_charge_voltage_max_microvolt
+DTB=/sys/firmware/devicetree/base/battery/constant_charge_voltage_max_microvolt
 POLL=20
 
 # Battery terminal voltage in mV: big-endian u32 uV from the dtb battery

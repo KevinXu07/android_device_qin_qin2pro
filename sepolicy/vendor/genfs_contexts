@@ -1,1 +1,15 @@
 genfscon sysfs /devices/platform/sprd_backlight/backlight/sprd_backlight u:object_r:sysfs_qin_backlight:s0
+genfscon sysfs /devices/platform/soc/soc:aon/41800000.spi/spi_master/spi4/spi4.0/sc27xx-bltc/leds u:object_r:sysfs_leds:s0
+genfscon sysfs /kernel/headset u:object_r:sysfs_headset:s0
+
+# vendor rc tunables + sensor/gesture nodes (vendor_init chmod/write, init.qin_vm.rc writes)
+genfscon sysfs /module/process_reclaim u:object_r:sysfs_qin_tunables:s0
+genfscon sysfs /module/shub_core u:object_r:sysfs_qin_tunables:s0
+genfscon sysfs /module/firmware_class u:object_r:sysfs_qin_tunables:s0
+genfscon sysfs /kernel/extpa u:object_r:sysfs_qin_tunables:s0
+genfscon sysfs /bus/iio u:object_r:sysfs_qin_tunables:s0
+genfscon sysfs /class/sprd_sensorhub u:object_r:sysfs_qin_tunables:s0
+genfscon sysfs /devices/virtual/misc/sprd_flash u:object_r:sysfs_qin_tunables:s0
+genfscon sysfs /devices/platform/soc/soc:ap-apb/70c00000.spi/spi_master/spi2/spi2.0/spidev u:object_r:sysfs_qin_tunables:s0
+genfscon sysfs /devices/platform/soc/soc:ap-apb/70800000.i2c/i2c-3/3-0038 u:object_r:sysfs_qin_tunables:s0
+genfscon sysfs /devices/platform/soc/soc:ap-apb/70900000.i2c u:object_r:sysfs_qin_tunables:s0

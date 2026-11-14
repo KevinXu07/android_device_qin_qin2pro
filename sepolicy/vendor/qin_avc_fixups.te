@@ -1,0 +1,175 @@
+# AVC fixups collected under permissive on the live device (2026-10-13).
+# The stock uboot appends androidboot.selinux=permissive; these rules cover
+# everything that was denied-but-allowed so late-init setenforce is safe.
+
+# --- sprd_vendor: modem pipes, power paths, props ---
+# stty_lte*/sdiag_lte* land on generic `device` until file_contexts labels them.
+allow sprd_vendor sysfs_devices_system_cpu:dir { getattr open read search };
+allow sprd_vendor sysfs_devices_system_cpu:file { getattr open read write };
+allow sprd_vendor cgroup:dir { getattr open read search };
+allow sprd_vendor cgroup:file { getattr open read write };
+allow sprd_vendor sysfs_wake_lock:file { getattr open read write };
+# connmgr keeps a /proc heartbeat (loopcheck)
+allow sprd_vendor proc:file write;
+# engpc/audio props are labeled sprd_prop via property_contexts
+# system_server binds sprd vendor binder services (health/power)
+binder_call(system_server, sprd_vendor)
+
+# --- audio HAL: modem VoIP pipes + prop/dirs ---
+allow hal_audio_default sprd_device:chr_file rw_file_perms;
+allow hal_audio_default property_socket:sock_file write;
+allow hal_audio_default init:unix_stream_socket connectto;
+allow hal_audio_default sprd_prop:property_service set;
+allow hal_audio_default vendor_data_file:dir { getattr open read write search add_name remove_name create };
+allow hal_audio_default vendor_data_file:file { getattr open read write append create };
+
+# --- vintf manifest lives on vendor_file label here ---
+
+# --- core domains probing selinux dir / prop areas ---
+allow servicemanager sepolicy_file:dir search;
+allow logd sepolicy_file:dir search;
+allow logd sepolicy_file:file { getattr open read };
+allow system_server build_bootimage_prop:file { getattr open read map };
+
+# --- vendor_init creates device nodes under /dev (tmpfs) ---
+allow vendor_init tmpfs:dir { write add_name create };
+allow vendor_init tmpfs:chr_file { create setattr };
+allow vendor_init tmpfs:file { create setattr };
+
+# --- i2c char nodes get a real label; toolbox keeps debug access ---
+# (i2c_device type comes from the 28.0 vendor-compat layer)
+allow toolbox i2c_device:chr_file rw_file_perms;
+
+# --- round 2: enforcing bring-up on new policy (2026-10-13) ---
+
+# sprd_vendor: usb gadget state, cmdline, kernel log socket, prop areas,
+# prodnv factory files, misc ioctls, vndbinder, backlight
+allow sprd_vendor sysfs_android_usb:dir r_dir_perms;
+allow sprd_vendor sysfs_android_usb:file r_file_perms;
+allow sprd_vendor proc_cmdline:file r_file_perms;
+unix_socket_connect(sprd_vendor, logdr, logd)
+allow sprd_vendor sprd_prop:file { getattr open read map };
+allow sprd_vendor default_prop:file { getattr open read map };
+allow sprd_vendor vendor_default_prop:file { getattr open read map };
+allow sprd_vendor vendor_data_file:file ioctl;
+allow sprd_vendor sysfs_qin_backlight:dir r_dir_perms;
+allow sprd_vendor sysfs_qin_backlight:file rw_file_perms;
+allow sprd_vendor qin_prodnv_file:dir rw_dir_perms;
+allow sprd_vendor qin_prodnv_file:file rw_file_perms;
+allow sprd_vendor sysfs_qin_tunables:dir { r_dir_perms setattr };
+allow sprd_vendor sysfs_qin_tunables:file rw_file_perms;
+binder_call(sprd_vendor, hal_health_default)
+binder_call(hal_health_default, sprd_vendor)
+
+# modem pipe nodes now labeled sprd_device via file_contexts
+# (spipe_lte/stty_lte/sdiag_lte used by connmgr/engpc/audio-voip)
+
+# mediacodec opens the sprd vsp codec node
+allow mediacodec sprd_device:chr_file rw_file_perms;
+
+# camera provider talks to binderfs/vndbinder
+allow hal_camera_default vndbinder_device:chr_file rw_file_perms;
+
+# audio HAL: headset state sysfs, sprd_vendor control socket, pipe fifos,
+# extpa PA-mode node (labeled sysfs_qin_tunables)
+allow hal_audio_default sysfs_headset:dir r_dir_perms;
+allow hal_audio_default sysfs_headset:file r_file_perms;
+allow hal_audio_default sysfs:file r_file_perms;
+allow hal_audio_default sprd_vendor:unix_stream_socket connectto;
+allow hal_audio_default vendor_data_file:sock_file { write getattr setattr };
+allow hal_audio_default sprd_prop:file { getattr open read map };
+allow hal_audio_default vendor_data_file:fifo_file rw_file_perms;
+allow hal_audio_default sysfs_qin_tunables:dir r_dir_perms;
+allow hal_audio_default sysfs_qin_tunables:file rw_file_perms;
+
+# bt/wifi rfkill power nodes (sysfs_bluetooth_writable via /sys/class/rfkill)
+allow hal_bluetooth_default sysfs_bluetooth_writable:file rw_file_perms;
+allow hal_wifi_default sysfs_bluetooth_writable:file rw_file_perms;
+
+# factory MAC files on the prodnv partition (mounted context=qin_prodnv_file)
+allow hal_bluetooth_default qin_prodnv_file:dir r_dir_perms;
+allow hal_bluetooth_default qin_prodnv_file:file r_file_perms;
+allow hal_wifi_default qin_prodnv_file:dir r_dir_perms;
+allow hal_wifi_default qin_prodnv_file:file r_file_perms;
+
+# sensor hub sysfs + gesture/fingerprint tunable nodes
+allow hal_sensors_default sysfs_qin_tunables:dir r_dir_perms;
+allow hal_sensors_default sysfs_qin_tunables:file rw_file_perms;
+allow hal_fingerprint_default sysfs_qin_tunables:dir r_dir_perms;
+allow hal_fingerprint_default sysfs_qin_tunables:file rw_file_perms;
+
+# engpc tries to exec /system/bin/sh for engmode shell commands; keep it
+# denied under enforcing (halserverdomain cannot execute_no_trans anyway).
+# modem pipe nodes (stty_lte*/sdiag_lte*) labeled sprd_device via fc
+allow sprd_vendor sprd_device:chr_file rw_file_perms;
+allow sprd_vendor mnt_vendor_file:dir getattr;
+# audio HAL chmods its calib dump (vbc_eq) under /data/vendor
+allow hal_audio_default vendor_data_file:file setattr;
+# restorecon in vendor_init reads platform file_contexts; vendor rc
+# reads a persist.sys thermal prop (neverallow relaxed by BROKEN flag)
+allow vendor_init system_file:file { getattr open read };
+allow vendor_init system_prop:file { getattr open read map };
+
+# vendor_init: rc-time sysfs/tmpfs/proc tweaks that survive as small allows.
+# The stock vendor rc files chmod a long list of device-specific sysfs/dev
+# nodes; they are labeled sysfs_qin_tunables via genfs_contexts.
+allow vendor_init system_prop:file read;
+allow vendor_init tmpfs:lnk_file create;
+allow vendor_init sysfs:lnk_file setattr;
+allow vendor_init proc_zoneinfo:file r_file_perms;
+allow vendor_init qin_prodnv_file:dir { search getattr setattr };
+allow vendor_init qin_prodnv_file:file { getattr setattr };
+allow vendor_init vendor_kernel_modules:system module_load;
+allow vendor_init vold_prop:property_service set;
+allow vendor_init sysfs_qin_tunables:dir { r_dir_perms setattr };
+allow vendor_init sysfs_qin_tunables:file rw_file_perms;
+allow vendor_init sysfs_lowmemorykiller:file w_file_perms;
+allow vendor_init sysfs_lowmemorykiller:dir r_dir_perms;
+allow vendor_init sysfs_headset:dir { r_dir_perms setattr };
+allow vendor_init sysfs_headset:file rw_file_perms;
+allow vendor_init cgroup:file w_file_perms;
+allow vendor_init cgroup:dir { getattr search setattr open read };
+allow vendor_init debugfs:dir { setattr getattr search };
+allow vendor_init graphics_device:chr_file setattr;
+allow vendor_init gpu_device:chr_file setattr;
+allow vendor_init sprd_device:chr_file { setattr getattr };
+allow vendor_init sprd_device:file { setattr getattr };
+allow vendor_init sysfs_zram:file w_file_perms;
+allow vendor_init ram_device:blk_file { open read write };
+# init_expand is exec'd with seclabel u:r:vendor_init from a file labeled
+# sprd_vendor_exec
+# init_expand runs as sprd_vendor via seclabel in init_expand.rc
+allow vendor_init sprd_vendor_exec:dir { getattr search };
+
+# --- round 3: denials seen on the new policy (2026-10-14) ---
+
+# health HAL reads fan54015 power_supply sysfs (labeled sysfs_qin_tunables)
+allow hal_health_default sysfs_qin_tunables:dir r_dir_perms;
+allow hal_health_default sysfs_qin_tunables:file r_file_perms;
+
+# sprd daemons: zoneinfo, vndbinder transport, engtest.db ioctls,
+# sprd_prop arena, binder calls to system_server
+allow sprd_vendor proc_zoneinfo:file r_file_perms;
+allow sprd_vendor vndbinder_device:chr_file rw_file_perms;
+allow sprd_vendor sprd_data_file:file { getattr open read write ioctl lock append };
+
+
+allow mediacodec sprd_prop:file { getattr open read map };
+allow hal_bluetooth_default sprd_prop:file { getattr open read map };
+# audio HAL chmods its loopback pipe
+allow hal_audio_default vendor_data_file:fifo_file setattr;
+
+# --- round 4 ---
+# sprd daemons chmod factory-mode marker on prodnv
+allow sprd_vendor qin_prodnv_file:file setattr;
+# HALs read sprd vendor props through the property arena
+allow hal_camera_default sprd_prop:file { getattr open read map };
+allow bluetooth sprd_prop:file { getattr open read map };
+
+# --- round 5 ---
+# vendor init binary tunes vm dirty thresholds (also set by init.qin_vm.rc)
+allow vendor_init proc:file write;
+
+# --- round 6 ---
+# vendor_init loads pvrsrvkm.ko via insmod (needs the capability too)
+allow vendor_init self:capability sys_module;

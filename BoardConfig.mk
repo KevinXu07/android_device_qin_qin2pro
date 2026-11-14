@@ -145,3 +145,6 @@ BUILD_BROKEN_DUP_RULES := true
 
 # Device SELinux policy (sprd vendor daemons, WCN/BT/wifi, torch, sprd HALs)
 BOARD_VENDOR_SEPOLICY_DIRS += device/qin/qin2pro/sepolicy/vendor
+SYSTEM_EXT_PRIVATE_SEPOLICY_DIRS += device/qin/qin2pro/sepolicy/private
+SYSTEM_EXT_PUBLIC_SEPOLICY_DIRS += device/qin/qin2pro/sepolicy/public
+BUILD_BROKEN_TREBLE_SYSPROP_NEVERALLOW := true

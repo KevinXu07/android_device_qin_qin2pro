@@ -1,7 +1,8 @@
-service chgterm /system/bin/sh /system/bin/chgterm4350.sh
+service chgterm /system/bin/chgterm4350.sh
     class main
     user root
     group root
+    seclabel u:r:chgterm:s0
 
 on charger
     start chgterm

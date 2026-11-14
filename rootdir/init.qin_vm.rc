@@ -1,0 +1,43 @@
+# Memory/VM tunables moved out of the stock vendor rc files: under SELinux
+# enforcing, vendor_init cannot write generic /proc and /sys nodes. Running
+# them in the init domain keeps the stock tuning without policy exceptions.
+on property:ro.vendor.ramconfig=8
+    write /sys/module/lowmemorykiller/parameters/enable_adaptive_lmk 1
+    write /sys/module/lowmemorykiller/parameters/vmpressure_notify_usr_min 75
+    write /sys/module/lowmemorykiller/parameters/vmpressure_notify_usr_enable 1
+    write /sys/module/process_reclaim/parameters/enable_process_reclaim 1
+    write /proc/sys/kernel/boost_killing 1
+    write /proc/sys/kernel/boost_sigkill_free 1
+    write /proc/sys/vm/direct_swappiness 100
+
+on property:sys.boot_completed=1
+    write /proc/sys/vm/swappiness 150
+    write /proc/sys/vm/page-cluster 0
+    write /sys/block/zram0/max_comp_streams 7
+    write /sys/block/zram0/comp_algorithm lz4
+    write /proc/sys/vm/dirty_background_bytes 4194304
+    write /proc/sys/vm/dirty_bytes 52428800
+    chmod 666 /sys/devices/platform/soc/soc:ap-apb/70c00000.spi/spi_master/spi2/spi2.0/spidev/silead_fp_dev/ir
+    chmod 666 /sys/kernel/extpa/select_mode
+    chmod 666 /sys/devices/platform/soc/soc:ap-apb/70800000.i2c/i2c-3/3-0038/fts_gesture_mode
+
+# data dirs and SF props moved out of the stock vendor rc files: vendor_init
+# is neverallowed from setattr/chown on core /data dirs and from setting
+# platform debug props.
+on post-fs-data
+    mkdir /data/local/media 0770 audioserver system
+    mkdir /data/misc 01771 system misc
+    mkdir /data/misc/dhcp 0770 dhcp dhcp
+    chown dhcp system /data/misc/dhcp
+    mkdir /data/misc/dhcp6c 0770 dhcp dhcp
+    chown dhcp system /data/misc/dhcp6c
+    mkdir /data/misc/hprofs 0777
+    mkdir /data/system 0770 system system
+    rmdir /data/system/wpa_supplicant
+    setprop debug.sf.disable_backpressure 1
+    setprop debug.sf.latch_unsignaled 1
+
+# prodnv is mounted without a SELinux context= option, so label its files
+# once the partition is up (early, before vendor services read it).
+on post-fs
+    restorecon_recursive /mnt/vendor

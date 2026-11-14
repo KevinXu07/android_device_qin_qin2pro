@@ -1,0 +1,11 @@
+# Types visible to both private and vendor policy sections.
+type sprd_device, dev_type;
+type i2c_device, dev_type;
+type sysfs_qin_backlight, fs_type, sysfs_type;
+type sysfs_headset, fs_type, sysfs_type;
+type qin_prodnv_block_device, dev_type, bdev_type;
+type sysfs_qin_tunables, fs_type, sysfs_type;
+# prodnv partition mounted with context= (MAC/calibration data for vendor)
+type qin_prodnv_file, file_type;
+type qin_misc_block_device, dev_type;
+type sprd_sysfs, sysfs_type, fs_type;

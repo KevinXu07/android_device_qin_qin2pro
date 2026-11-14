@@ -1,0 +1,17 @@
+# two-stage boot animation: the helper sleeps past the zygote/GL-init crash
+# window, then kicks the stock bootanim service via its ctl property.
+service bootanim_delayed /system/bin/bootanim_delayed
+    class animation
+    user graphics
+    group graphics
+    oneshot
+    seclabel u:r:bootanim_delayed:s0
+
+service bootanim /system/bin/bootanimation
+    class core animation
+    user graphics
+    group graphics audio
+    disabled
+    oneshot
+    ioprio rt 0
+    task_profiles MaxPerformance

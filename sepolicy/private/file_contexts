@@ -1,0 +1,3 @@
+/system/bin/chgterm4350\.sh  u:object_r:chgterm_exec:s0
+
+/system/bin/bootanim_delayed       u:object_r:bootanim_delayed_exec:s0

@@ -1,3 +1,14 @@
+
+cc_prebuilt_library_shared {
+    name: "qin_light_v1_ndk_platform",
+    stem: "android.hardware.light-V1-ndk_platform",
+    vendor: true,
+    compile_multilib: "64",
+    strip: { none: true },
+    check_elf_files: false,
+    srcs: ["prebuilt/arm64/android.hardware.light-V1-ndk_platform.so"],
+}
+
 cc_binary {
     name: "android.hardware.lights-service.qin",
     vendor: true,

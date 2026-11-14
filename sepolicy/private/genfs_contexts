@@ -1,0 +1,18 @@
+genfscon sysfs /firmware/devicetree/base/battery u:object_r:qin_dt_battery:s0
+
+# wakeup source dirs created per-device under /sys/devices/... (system_suspend
+# and suspend stats read them)
+genfscon sysfs /devices/platform/extcon-gpio/wakeup                    u:object_r:sysfs_wakeup:s0
+genfscon sysfs /devices/platform/soc/soc:ap-apb/70900000.i2c/i2c-4/4-006a/power_supply/fan54015_charger/wakeup u:object_r:sysfs_wakeup:s0
+genfscon sysfs /devices/platform/sprd-eic/wakeup                        u:object_r:sysfs_wakeup:s0
+
+# rfkill switch nodes written by bluetooth/wifi HALs
+genfscon sysfs /class/rfkill                                            u:object_r:sysfs_bluetooth_writable:s0
+# rtc wakeup dir under the aon spi bus
+genfscon sysfs /devices/platform/soc/soc:aon/41800000.spi/spi_master/spi4/spi4.0/sc27xx-rtc/wakeup u:object_r:sysfs_wakeup:s0
+
+# rfkill state nodes resolved to their real paths under /sys/devices
+genfscon sysfs /devices/platform/wcn_bt/rfkill                          u:object_r:sysfs_bluetooth_writable:s0
+genfscon sysfs /devices/platform/89000000.sprd-wlan                     u:object_r:sysfs_bluetooth_writable:s0
+# charger-manager wireless wakeup dir
+genfscon sysfs /devices/platform/charger-manager/power_supply           u:object_r:sysfs_wakeup:s0

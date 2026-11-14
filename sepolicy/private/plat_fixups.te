@@ -1,0 +1,110 @@
+# Platform-domain AVC fixups for the Qin 2 Pro enforcing bring-up.
+# These cover init/kernel/fsck and platform processes that touch
+# vendor-labelled objects or device-specific sysfs.
+
+# init writes the panel backlight + small /data marker files and mounts
+# functionfs/pstore/prodnv.
+allow init sysfs_qin_backlight:file rw_file_perms;
+allow init sysfs_qin_backlight:dir r_dir_perms;
+allow init ram_device:blk_file rw_file_perms;
+allow init mnt_vendor_file:dir mounton;
+allow init functionfs:dir mounton;
+allow init pstorefs:dir mounton;
+allow init unlabeled:dir mounton;
+allow init system_data_file:file append;
+allow init servicemanager:binder call;
+allow init vendor_kernel_modules:system module_load;
+allow init self:capability sys_module;
+allow init { userdata_block_device cache_block_device qin_prodnv_block_device }:blk_file { rw_file_perms };
+
+# init.qin_vm.rc writes vm/lmk tunables (moved from vendor rc files so they
+# run in the init domain, which may write /proc but not generic /sys)
+allow init proc:file w_file_perms;
+allow init proc:file setattr;
+# stock vendor rc chmods sysfs nodes under the generic sysfs label
+# (init neverallows cover open/read/write only, setattr is ok)
+allow init sysfs:file setattr;
+allow init sysfs_qin_tunables:file w_file_perms;
+allow init sysfs_lowmemorykiller:file w_file_perms;
+allow init sysfs_lowmemorykiller:dir r_dir_perms;
+allow init sysfs_qin_tunables:dir { r_dir_perms setattr };
+allow init sysfs_zram:file w_file_perms;
+allow init sysfs_zram:dir r_dir_perms;
+
+# /dev/qin_boot_ok marker file written by qin_wd.rc (write builtin)
+allow init device:file { create setattr write open getattr };
+allow init device:dir { add_name write getattr };
+allow init device:lnk_file { create getattr };
+allow init sprd_device:file { create setattr write open getattr };
+
+# devtmpfs: the kernel creates dynamic nodes (ttyBT0, pvr_sync, mtp_usb)
+allow kernel device:chr_file { create setattr };
+allow kernel device:dir { add_name write };
+allow kernel self:capability mknod;
+# kernel opens block devices directly (verity/dm) and reads prodnv
+# calibration data
+allow kernel block_device:blk_file { open read write };
+allow kernel tmpfs:blk_file { open read write };
+# prodnv mounts without a context= option; kernel writes wcn files
+allow kernel unlabeled:dir { getattr open read search write add_name };
+allow kernel unlabeled:file { getattr open read write };
+allow kernel { userdata_block_device cache_block_device qin_prodnv_block_device }:blk_file { open read write };
+allow kernel qin_prodnv_file:dir { search getattr };
+allow kernel qin_prodnv_file:file { open read write getattr };
+
+# fsck checks the prodnv/cache/userdata block devices
+allow fsck qin_prodnv_block_device:blk_file rw_file_perms;
+allow fsck cache_block_device:blk_file rw_file_perms;
+allow fsck cache_file:dir getattr;
+allow fsck qin_prodnv_file:dir getattr;
+
+# audioserver/surfaceflinger read vendor property arenas
+allow audioserver vendor_default_prop:file { getattr map open read };
+allow surfaceflinger vendor_default_prop:file { getattr map open read };
+
+# PowerVR EGL/driver libs are dlopened into platform processes
+allow surfaceflinger same_process_hal_file:file { execute r_file_perms };
+allow platform_app same_process_hal_file:file { execute r_file_perms };
+allow system_app same_process_hal_file:file { execute r_file_perms };
+
+# system_suspend reads wakeup-source stats (fan54015 wakeup4)
+allow system_suspend sysfs_qin_tunables:dir r_dir_perms;
+allow system_suspend sysfs_qin_tunables:file r_file_perms;
+
+# --- round 3 ---
+# init chmods a sysfs symlink (iio) and the extpa mode node
+allow init sysfs:lnk_file setattr;
+allow init sysfs_qin_tunables:file setattr;
+# system_suspend enumerates wakeup sources under unlabeled sysfs dirs
+allow system_suspend sysfs:dir r_dir_perms;
+# init mounts prodnv on /mnt/vendor whichever label the dir carries
+allow init qin_prodnv_file:dir mounton;
+
+# vendor HALs exchange binder with system_suspend (audio wake/hints) and
+# call into system_server; expressed via the public halserverdomain attr
+binder_call(halserverdomain, system_suspend)
+binder_call(system_suspend, halserverdomain)
+binder_call(halserverdomain, system_server)
+
+# --- round 4 ---
+# init chmods the backlight brightness node at boot
+allow init sysfs_qin_backlight:file setattr;
+# init reads thermal_zone symlinks under sprd_sysfs
+allow init sprd_sysfs:lnk_file { getattr read };
+# kernel watchdog thread (qin_wd) writes the misc partition directly
+allow kernel qin_misc_block_device:blk_file { open read write };
+# system_suspend reads wakeup counters (nodes labeled sysfs_wakeup via genfs)
+allow system_suspend sysfs_wakeup:dir r_dir_perms;
+allow system_suspend sysfs_wakeup:file r_file_perms;
+
+# --- round 5 ---
+# ueventd relabels the misc block node after fc labels it
+allow init qin_misc_block_device:blk_file relabelto;
+allow init qin_misc_block_device:lnk_file relabelto;
+# kernel wcn driver creates a calibration backup on prodnv
+allow kernel qin_prodnv_file:dir { write add_name };
+allow kernel qin_prodnv_file:file create;
+
+# --- round 6 ---
+# surfaceflinger calls sprd vendor binder services (composer/power)
+binder_call(surfaceflinger, halserverdomain)

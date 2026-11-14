@@ -137,13 +137,16 @@ PRODUCT_VENDOR_PROPERTIES += vendor.hwc.drm.scale_with_gpu=1
 
 # Retain startup logs across boots during display bring-up.
 PRODUCT_COPY_FILES += \
-    $(DEVICE_PATH)/rootdir/qin_gpu_debug.rc:$(TARGET_COPY_OUT_SYSTEM)/etc/init/qin_gpu_debug.rc
+    $(DEVICE_PATH)/rootdir/qin_gpu_debug.rc:$(TARGET_COPY_OUT_SYSTEM)/etc/init/qin_gpu_debug.rc \
+    $(DEVICE_PATH)/rootdir/init.qin_vm.rc:$(TARGET_COPY_OUT_SYSTEM)/etc/init/init.qin_vm.rc
 
 # Delay the GL boot animation ~20s so zygote64 finishes its preload/GC-heavy
 # startup first; concurrent animation caused ART heap crashes on this 1.8GB
-# device. The script sleeps then execs the real bootanimation binary.
+# device. Native helper (shell scripts cannot be exec'd by init under
+# enforcing): sleeps, then sets ctl.bootanim to start the real service.
+PRODUCT_PACKAGES += bootanim_delayed
 PRODUCT_COPY_FILES += \
-    $(DEVICE_PATH)/prebuilts/bootanimation_delayed:$(TARGET_COPY_OUT_SYSTEM)/bin/bootanimation_delayed
+    $(DEVICE_PATH)/bootanim_delayed/bootanim_delayed.rc:$(TARGET_COPY_OUT_SYSTEM)/etc/init/bootanim.rc
 
 # Skipping the zygote graphics-driver preload frees tens of MB during boot
 # (both zygotes would otherwise load the PVR stack), giving the boot
@@ -178,6 +181,9 @@ PRODUCT_PACKAGES += android.hardware.vibrator@1.0-service.qin
 
 # Native panel backlight HAL; avoids stock light ABI and absent LED paths.
 PRODUCT_PACKAGES += android.hardware.lights-service.qin
+# install the AIDL light NDK lib into /vendor/lib64: it is otherwise only staged
+# into the flattened VNDK-current apex which is not mounted at runtime
+PRODUCT_PACKAGES += qin_light_v1_ndk_platform
 
 # AI key (gpio-keys kernel code 213 -> ASSIST; see vendor gpio-keys.kl).
 # HwKeysOverlay: static RRO on lineageos.platform setting
@@ -196,3 +202,4 @@ PRODUCT_PACKAGES += HwKeysOverlay ButtonStringsOverlay
 PRODUCT_COPY_FILES += \
     $(DEVICE_PATH)/rootdir/chgterm4350.sh:$(TARGET_COPY_OUT_SYSTEM)/bin/chgterm4350.sh \
     $(DEVICE_PATH)/rootdir/chgterm.rc:$(TARGET_COPY_OUT_VENDOR)/etc/init/chgterm.rc
+

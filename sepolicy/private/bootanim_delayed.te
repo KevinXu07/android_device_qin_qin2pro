@@ -1,0 +1,6 @@
+# bootanim_delayed: native helper that sleeps past the early-boot GL crash
+# window, then starts the stock bootanim service via ctl.bootanim.
+type bootanim_delayed, coredomain, domain;
+type bootanim_delayed_exec, exec_type, file_type, system_file_type;
+init_daemon_domain(bootanim_delayed)
+set_prop(bootanim_delayed, ctl_bootanim_prop)

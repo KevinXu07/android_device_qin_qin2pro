@@ -1,0 +1,25 @@
+# chgterm: root daemon that keeps fan54015 charge-termination registers at the
+# dtb battery rating. The stock kernel never programs VSAFE/VOREG and sysfs is
+# read-only, so the daemon writes them over /dev/i2c-4 via toybox i2cset.
+type chgterm, domain;
+typeattribute chgterm coredomain;
+type chgterm_exec, exec_type, file_type, system_file_type;
+init_daemon_domain(chgterm)
+allow chgterm chgterm_exec:file { getattr open read execute entrypoint map };
+
+# /dev/i2c-4 (labeled i2c_device via vendor file_contexts)
+allow chgterm i2c_device:chr_file rw_file_perms;
+
+# toybox applets (i2cget/i2cset/od/tr/sleep/log) run in-domain
+allow chgterm shell_exec:file { getattr open read execute map };
+allow chgterm toolbox_exec:file { getattr open read execute execute_no_trans map };
+allow chgterm system_file:file { getattr open read execute map };
+
+# reads target voltage from the dtb battery node (labeled qin_dt_battery)
+type qin_dt_battery, sysfs_type, fs_type;
+allow chgterm sysfs:dir { getattr open read search };
+allow chgterm qin_dt_battery:dir r_dir_perms;
+allow chgterm qin_dt_battery:file r_file_perms;
+
+# log -t -> logd
+unix_socket_connect(chgterm, logd, logd)
