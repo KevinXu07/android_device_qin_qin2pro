@@ -1,0 +1,21 @@
+diff --git a/src/java/com/android/internal/telephony/PhoneSwitcher.java b/src/java/com/android/internal/telephony/PhoneSwitcher.java
+index c84558c83d..b2c0057321 100644
+--- a/src/java/com/android/internal/telephony/PhoneSwitcher.java
++++ b/src/java/com/android/internal/telephony/PhoneSwitcher.java
+@@ -1111,6 +1111,16 @@ public class PhoneSwitcher extends Handler {
+                 }
+             }
+         }
++
++        if (diffDetected) {
++            // switchPhone() sends no modem command for a phone that is already
++            // active, so onDdsSwitchResponse() (the only place registrants are
++            // notified) never runs. If the phone->subId mapping arrives after
++            // the DDS switch, TelephonyNetworkFactory keeps every request
++            // unapplied and mobile data never starts. Re-notify here;
++            // onActivePhoneSwitch() is a no-op for unchanged requests.
++            mActivePhoneRegistrants.notifyRegistrants();
++        }
+         return diffDetected;
+     }
+ 

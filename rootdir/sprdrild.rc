@@ -1,0 +1,7 @@
+service vendor.ril-daemon /vendor/bin/hw/sprdrild
+    override
+    class core
+    disabled
+    user radio
+    group radio cache inet misc audio log readproc wakelock sdcard_rw shell system dhcp
+    capabilities BLOCK_SUSPEND NET_ADMIN NET_RAW

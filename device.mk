@@ -203,3 +203,11 @@ PRODUCT_COPY_FILES += \
     $(DEVICE_PATH)/rootdir/chgterm4350.sh:$(TARGET_COPY_OUT_SYSTEM)/bin/chgterm4350.sh \
     $(DEVICE_PATH)/rootdir/chgterm.rc:$(TARGET_COPY_OUT_VENDOR)/etc/init/chgterm.rc
 
+# RIL: use the stock SPRD rild (sprdrild loads librilsprd.so/libsprd-ril.so
+# itself). AOSP rild from telephony_vendor.mk defines the same
+# vendor.ril-daemon service with no lib path and just sleeps; sprdrild.rc
+# sorts after rild.rc and uses `override` so init takes this definition.
+# disabled: modemd starts it once the CP reports "Modem Alive" (stock flow).
+PRODUCT_COPY_FILES += \
+    $(DEVICE_PATH)/rootdir/sprdrild.rc:$(TARGET_COPY_OUT_VENDOR)/etc/init/sprdrild.rc
+
