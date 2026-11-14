@@ -1,0 +1,9 @@
+# Qin 2 Pro: modem IMS enabler (vendor/bin/qin_ims.sh), see rootdir/qin_ims.sh
+type qin_ims, domain;
+type qin_ims_exec, exec_type, vendor_file_type, file_type;
+
+init_daemon_domain(qin_ims)
+
+allow qin_ims vendor_shell_exec:file rx_file_perms;
+allow qin_ims vendor_toolbox_exec:file rx_file_perms;
+allow qin_ims sprd_device:chr_file rw_file_perms;

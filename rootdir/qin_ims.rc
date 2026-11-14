@@ -1,0 +1,4 @@
+service vendor.qin_ims /vendor/bin/qin_ims.sh
+    class late_start
+    user radio
+    group radio system

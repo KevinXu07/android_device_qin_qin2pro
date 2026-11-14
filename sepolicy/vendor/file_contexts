@@ -248,3 +248,5 @@
 # PowerVR shader compiler lib dlopened by apps/sf
 /system/vendor/lib(64)?/libusc\.so      u:object_r:same_process_hal_file:s0
 
+# modem IMS enabler (VoLTE), see rootdir/qin_ims.sh
+/(vendor|system/vendor)/bin/qin_ims\.sh   u:object_r:qin_ims_exec:s0

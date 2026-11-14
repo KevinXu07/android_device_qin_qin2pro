@@ -211,3 +211,8 @@ PRODUCT_COPY_FILES += \
 PRODUCT_COPY_FILES += \
     $(DEVICE_PATH)/rootdir/sprdrild.rc:$(TARGET_COPY_OUT_VENDOR)/etc/init/sprdrild.rc
 
+# VoLTE: LOS has no Unisoc IMS client; keep the modem-side IMS stack enabled
+# (AT+IMSEN=1 on a spare AT channel). See rootdir/qin_ims.sh.
+PRODUCT_COPY_FILES += \
+    $(DEVICE_PATH)/rootdir/qin_ims.sh:$(TARGET_COPY_OUT_VENDOR)/bin/qin_ims.sh \
+    $(DEVICE_PATH)/rootdir/qin_ims.rc:$(TARGET_COPY_OUT_VENDOR)/etc/init/qin_ims.rc
